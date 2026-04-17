@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "FlowWhips",
+    "slug": "flowwhips",
+    "version": "0.0.1",
+    "orientation": "default",
+    "scheme": "flowwhips",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flowwhips.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {},
+      "package": "com.flowwhips.mobile"
+    },
+    "plugins": ["expo-router", "expo-secure-store"]
+  }
+}
