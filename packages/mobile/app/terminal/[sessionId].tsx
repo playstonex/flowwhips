@@ -10,14 +10,19 @@ export default function TerminalScreen() {
   const router = useRouter();
   const xtermRef = useRef<XtermWebViewRef>(null);
   const [status, setStatus] = useState('running');
+  const [xtermStatus, setXtermStatus] = useState<string>('loading...');
+  const [wsConnected, setWsConnected] = useState(wsService.connected);
 
   useEffect(() => {
     if (!sessionId) return;
+
+    console.log('[Terminal] sessionId:', sessionId, 'ws connected:', wsService.connected);
 
     wsService.send({ type: 'control', action: 'attach_session', sessionId });
 
     const unsubOutput = wsService.on('terminal_output', (msg) => {
       if (msg.type === 'terminal_output' && msg.sessionId === sessionId) {
+        console.log('[Terminal] output received, len:', msg.data?.length);
         xtermRef.current?.write(msg.data);
       }
     });
@@ -28,9 +33,14 @@ export default function TerminalScreen() {
       }
     });
 
+    const unsubState = wsService.on('_state', () => {
+      setWsConnected(wsService.connected);
+    });
+
     return () => {
       unsubOutput();
       unsubStatus();
+      unsubState();
       wsService.send({ type: 'control', action: 'detach_session', sessionId });
     };
   }, [sessionId]);
@@ -44,14 +54,39 @@ export default function TerminalScreen() {
   );
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#1e1e1e' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#1e1e1e' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       {/* Toolbar */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#333', backgroundColor: '#2d2d2d' }}>
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: STATUS_COLORS[status] ?? '#94a3b8', marginRight: 8 }} />
-        <Text style={{ color: '#ccc', fontSize: 12, fontFamily: 'monospace' }}>{sessionId?.slice(0, 8)}</Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: '#333',
+          backgroundColor: '#2d2d2d',
+        }}
+      >
+        <View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: STATUS_COLORS[status] ?? '#94a3b8',
+            marginRight: 8,
+          }}
+        />
+        <Text style={{ color: '#ccc', fontSize: 12, fontFamily: 'monospace' }}>
+          {sessionId?.slice(0, 8)}
+        </Text>
         <Text style={{ color: '#666', fontSize: 11, marginLeft: 8 }}>{status}</Text>
         <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={() => router.push(`/agent/${sessionId}`)} style={{ paddingHorizontal: 8 }}>
+        <TouchableOpacity
+          onPress={() => router.push(`/agent/${sessionId}`)}
+          style={{ paddingHorizontal: 8 }}
+        >
           <Text style={{ color: '#3b82f6', fontSize: 13 }}>Events</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 8 }}>
@@ -60,7 +95,34 @@ export default function TerminalScreen() {
       </View>
 
       {/* xterm.js Terminal */}
-      <XtermWebView ref={xtermRef} onInput={handleInput} />
+      <XtermWebView
+        ref={xtermRef}
+        onInput={handleInput}
+        onStatus={(loaded, error) => {
+          setXtermStatus(loaded ? 'xterm loaded' : `xterm error: ${error}`);
+          console.log('[Terminal] xterm status:', loaded, error);
+        }}
+      />
+
+      {/* Debug overlay — remove after testing */}
+      {!wsConnected && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 16,
+            left: 16,
+            right: 16,
+            backgroundColor: '#991b1b',
+            padding: 10,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 12 }}>⚠️ WebSocket not connected</Text>
+          <Text style={{ color: '#fecaca', fontSize: 11 }}>
+            Go to Settings → configure daemon URL → Connect
+          </Text>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

@@ -33,9 +33,23 @@ export class FileWatcher {
     const ignore = [...DEFAULT_IGNORE, ...(this.options.ignorePatterns ?? [])];
 
     this.watcher = watch(this.options.projectPath, {
-      ignored: ignore,
+      ignored: [
+        (path) => {
+          if (path === this.options.projectPath) return false;
+          const rel = path.slice(this.options.projectPath.length + 1);
+          const segs = rel.split('/');
+          return (
+            segs.includes('node_modules') ||
+            segs.includes('.git') ||
+            segs.includes('dist') ||
+            segs.includes('.turbo')
+          );
+        },
+        ...ignore,
+      ],
       persistent: true,
       ignoreInitial: true,
+      ignorePermissionErrors: true,
       awaitWriteFinish: {
         stabilityThreshold: 200,
         pollInterval: 100,
