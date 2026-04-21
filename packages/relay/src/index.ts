@@ -3,6 +3,14 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { MessageBuffer } from './buffer.js';
 import { PairingService } from './pairing.js';
+import {
+  generateKeyPair,
+  deriveSharedKey,
+  encrypt,
+  decrypt,
+  generateNonce,
+  keyToFingerprint,
+} from '@flowwhips/shared/crypto';
 
 const DEFAULT_PORT = 3230;
 
@@ -12,6 +20,9 @@ interface HostConnection {
   messageBuffer: MessageBuffer;
   lastSeen: number;
   publicKeyFingerprint?: string;
+  sharedKey?: Uint8Array;
+  publicKey?: Uint8Array;
+  encryptionEnabled: boolean;
 }
 
 interface ClientConnection {
@@ -20,6 +31,9 @@ interface ClientConnection {
   ws: WebSocket;
   lastSeen: number;
   publicKeyFingerprint?: string;
+  sharedKey?: Uint8Array;
+  publicKey?: Uint8Array;
+  encryptionEnabled: boolean;
 }
 
 export class RelayServer {
@@ -98,8 +112,14 @@ export class RelayServer {
 
   private handleMessage(ws: WebSocket, msg: Record<string, unknown>): void {
     switch (msg.type) {
+      case 'encrypted':
+        this.handleEncryptedMessage(ws, msg);
+        break;
       case 'register':
         this.handleRegister(ws, msg);
+        break;
+      case 'key_exchange':
+        this.handleKeyExchange(ws, msg);
         break;
       case 'pair_request':
         this.handlePairRequest(ws, msg);
@@ -110,6 +130,70 @@ export class RelayServer {
       default:
         this.handleForward(ws, msg);
         break;
+    }
+  }
+
+  private handleEncryptedMessage(ws: WebSocket, msg: Record<string, unknown>): void {
+    const payload = msg.payload as string;
+    if (!payload) {
+      ws.send(JSON.stringify({ type: 'error', message: 'payload required' }));
+      return;
+    }
+
+    const host = this.findHostByWs(ws);
+    if (host && host.sharedKey) {
+      const decrypted = this.decryptPayload(payload, host.sharedKey);
+      if (decrypted) {
+        this.handleForward(ws, decrypted);
+      }
+      return;
+    }
+
+    const client = this.findClientByWs(ws);
+    if (client && client.sharedKey) {
+      const decrypted = this.decryptPayload(payload, client.sharedKey);
+      if (decrypted) {
+        this.handleForward(ws, decrypted);
+      }
+    }
+  }
+
+  private handleKeyExchange(ws: WebSocket, msg: Record<string, unknown>): void {
+    const peerPublicKeyBase64 = msg.publicKey as string;
+    if (!peerPublicKeyBase64) {
+      ws.send(JSON.stringify({ type: 'error', message: 'publicKey required' }));
+      return;
+    }
+
+    const peerPublicKey = Uint8Array.from(atob(peerPublicKeyBase64), (c) => c.charCodeAt(0));
+    const myKeyPair = generateKeyPair();
+    const sharedKey = deriveSharedKey(peerPublicKey, myKeyPair.secretKey);
+
+    const host = this.findHostByWs(ws);
+    const client = this.findClientByWs(ws);
+
+    if (host) {
+      host.publicKey = peerPublicKey;
+      host.sharedKey = sharedKey;
+      host.encryptionEnabled = true;
+
+      ws.send(
+        JSON.stringify({
+          type: 'key_exchange_done',
+          publicKey: btoa(String.fromCharCode(...myKeyPair.publicKey)),
+        }),
+      );
+    } else if (client) {
+      client.publicKey = peerPublicKey;
+      client.sharedKey = sharedKey;
+      client.encryptionEnabled = true;
+
+      ws.send(
+        JSON.stringify({
+          type: 'key_exchange_done',
+          publicKey: btoa(String.fromCharCode(...myKeyPair.publicKey)),
+        }),
+      );
     }
   }
 
@@ -131,6 +215,7 @@ export class RelayServer {
         messageBuffer: existing?.messageBuffer ?? new MessageBuffer(),
         lastSeen: Date.now(),
         publicKeyFingerprint,
+        encryptionEnabled: false,
       });
 
       ws.send(JSON.stringify({ type: 'registered', hostId }));
@@ -157,6 +242,7 @@ export class RelayServer {
         ws,
         lastSeen: Date.now(),
         publicKeyFingerprint,
+        encryptionEnabled: false,
       });
 
       ws.send(
@@ -199,30 +285,61 @@ export class RelayServer {
     );
   }
 
+  private encryptPayload(msg: Record<string, unknown>, sharedKey: Uint8Array): string {
+    const plaintext = new TextEncoder().encode(JSON.stringify(msg));
+    const nonce = generateNonce();
+    const ciphertext = encrypt(plaintext, nonce, sharedKey);
+    const payload = new Uint8Array(nonce.length + ciphertext.length);
+    payload.set(nonce, 0);
+    payload.set(ciphertext, nonce.length);
+    return btoa(String.fromCharCode(...payload));
+  }
+
+  private decryptPayload(payload: string, sharedKey: Uint8Array): Record<string, unknown> | null {
+    try {
+      const data = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
+      const nonce = data.slice(0, 24);
+      const ciphertext = data.slice(24);
+      const plaintext = decrypt(ciphertext, nonce, sharedKey);
+      if (!plaintext) return null;
+      return JSON.parse(new TextDecoder().decode(plaintext));
+    } catch {
+      return null;
+    }
+  }
+
   private handleForward(ws: WebSocket, msg: Record<string, unknown>): void {
-    // Host → Clients (forward opaque encrypted blobs)
     const host = this.findHostByWs(ws);
     if (host) {
       host.lastSeen = Date.now();
       const payload = JSON.stringify(msg);
-
       host.messageBuffer.push(payload);
 
       for (const client of this.clients.values()) {
         if (client.hostId === host.hostId && client.ws.readyState === WebSocket.OPEN) {
-          client.ws.send(payload);
+          if (host.encryptionEnabled && client.encryptionEnabled && host.sharedKey && client.sharedKey) {
+            const encrypted = this.encryptPayload(msg, host.sharedKey);
+            client.ws.send(JSON.stringify({ type: 'encrypted', payload: encrypted }));
+          } else {
+            client.ws.send(payload);
+          }
         }
       }
       return;
     }
 
-    // Client → Host (forward opaque encrypted blobs)
     const client = this.findClientByWs(ws);
     if (client) {
       client.lastSeen = Date.now();
       const hostConn = this.hosts.get(client.hostId);
+
       if (hostConn?.ws.readyState === WebSocket.OPEN) {
-        hostConn.ws.send(JSON.stringify(msg));
+        if (client.encryptionEnabled && hostConn.encryptionEnabled && client.sharedKey && hostConn.sharedKey) {
+          const encrypted = this.encryptPayload(msg, client.sharedKey);
+          hostConn.ws.send(JSON.stringify({ type: 'encrypted', payload: encrypted }));
+        } else {
+          hostConn.ws.send(JSON.stringify(msg));
+        }
       } else {
         ws.send(JSON.stringify({ type: 'error', message: 'Host is offline' }));
       }
@@ -233,7 +350,13 @@ export class RelayServer {
     const recent = host.messageBuffer.recent();
     for (const msg of recent) {
       if (clientWs.readyState === WebSocket.OPEN) {
-        clientWs.send(msg.data);
+        const parsed = JSON.parse(msg.data);
+        if (host.encryptionEnabled && clientWs.encryptionEnabled && host.sharedKey) {
+          const encrypted = this.encryptPayload(parsed, host.sharedKey);
+          clientWs.send(JSON.stringify({ type: 'encrypted', payload: encrypted }));
+        } else {
+          clientWs.send(msg.data);
+        }
       }
     }
   }

@@ -94,6 +94,16 @@ export interface AgentAdapter {
   parseOutput(raw: string): ParsedEvent[];
 }
 
+export interface SdkAgentAdapter extends AgentAdapter {
+  isSdkAvailable(): boolean;
+  startSession(
+    config: AgentConfig,
+    onEvent: (event: ParsedEvent) => void,
+  ): Promise<{ write: (input: string) => void; stop: () => Promise<void> }>;
+}
+
+export type AdapterMode = 'pty' | 'sdk';
+
 export interface SpawnConfig {
   command: string;
   args: string[];
