@@ -25,6 +25,7 @@ export class WebSocketService {
   private _connected = false;
   private config: ConnectionConfig = { mode: 'remote' };
   private reconnectDelay = 1000;
+  private activeSessionId: string | null = null;
 
   get connected(): boolean {
     return this._connected;
@@ -82,6 +83,7 @@ export class WebSocketService {
 
     this.ws.onclose = () => {
       this._connected = false;
+      this.activeSessionId = null;
       this.stopHeartbeat();
       this.notifyStateChange();
       this.scheduleReconnect();
@@ -110,7 +112,7 @@ export class WebSocketService {
       }
       case Channel.Terminal: {
         const text = new TextDecoder().decode(frame.payload);
-        this.dispatch({ type: 'terminal_output', sessionId: '', data: text } as DaemonMessage);
+        this.dispatch({ type: 'terminal_output', sessionId: this.activeSessionId ?? '', data: text } as DaemonMessage);
         break;
       }
       case Channel.Events: {
@@ -122,9 +124,20 @@ export class WebSocketService {
   }
 
   send(msg: unknown): void {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(msg));
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    if (msg && typeof msg === 'object' && 'type' in msg) {
+      const m = msg as Record<string, unknown>;
+      if (m.type === 'control') {
+        if (m.action === 'attach_session' && typeof m.sessionId === 'string') {
+          this.activeSessionId = m.sessionId;
+        } else if (m.action === 'detach_session') {
+          this.activeSessionId = null;
+        }
+      }
     }
+
+    this.ws.send(JSON.stringify(msg));
   }
 
   disconnect(): void {

@@ -27,12 +27,9 @@ export default function TerminalScreen() {
     [sessionId],
   );
 
+  // Subscribe to events (once per sessionId)
   useEffect(() => {
     if (!sessionId) return;
-
-    console.log('[Terminal] sessionId:', sessionId, 'ws connected:', wsService.connected);
-
-    wsService.send({ type: 'control', action: 'attach_session', sessionId });
 
     const unsubOutput = wsService.on('terminal_output', (msg) => {
       if (msg.type === 'terminal_output' && msg.sessionId === sessionId) {
@@ -51,13 +48,31 @@ export default function TerminalScreen() {
       setWsConnected(wsService.connected);
     });
 
+    const unsubError = wsService.on('error', (msg) => {
+      if ('message' in msg) {
+        xtermRef.current?.write(`\x1b[31mError: ${msg.message}\x1b[0m\r\n`);
+      }
+    });
+
     return () => {
       unsubOutput();
       unsubStatus();
       unsubState();
-      wsService.send({ type: 'control', action: 'detach_session', sessionId });
+      unsubError();
     };
   }, [sessionId]);
+
+  // Attach/detach session — re-sends attach when WS (re)connects
+  useEffect(() => {
+    if (!sessionId || !wsConnected) return;
+
+    console.log('[Terminal] attaching session:', sessionId);
+    wsService.send({ type: 'control', action: 'attach_session', sessionId });
+
+    return () => {
+      wsService.send({ type: 'control', action: 'detach_session', sessionId });
+    };
+  }, [sessionId, wsConnected]);
 
   const handleInput = useCallback(
     (data: string) => {
