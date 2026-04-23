@@ -1,0 +1,15 @@
+[package]
+name = "flowwhips-pty"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "flowwhips-pty"
+path = "src/main.rs"
+
+[dependencies]
+portable-pty = "0.9"
+vte = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
