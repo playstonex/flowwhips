@@ -1,0 +1,195 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-cli:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            bun_target: bun-linux-x64
+          - os: macos-latest
+            target: macos-arm64
+            bun_target: bun-darwin-arm64
+          - os: macos-13
+            target: macos-x64
+            bun_target: bun-darwin-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Compile CLI binary
+        run: |
+          bun build ./packages/cli/dist/index.js \
+            --compile \
+            --target=${{ matrix.bun_target }} \
+            --outfile=flowwhips-${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flowwhips-${{ matrix.target }}
+          path: flowwhips-${{ matrix.target }}
+
+  build-daemon:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            bun_target: bun-linux-x64
+          - os: macos-latest
+            target: macos-arm64
+            bun_target: bun-darwin-arm64
+          - os: macos-13
+            target: macos-x64
+            bun_target: bun-darwin-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Build Rust PTY
+        run: cargo build --release --manifest-path packages/daemon/pty/Cargo.toml
+
+      - name: Bundle daemon + PTY binary
+        run: |
+          mkdir -p bundle
+          cp packages/daemon/pty/target/release/flowwhips-pty bundle/
+          bun build ./packages/daemon/src/index.ts \
+            --compile \
+            --target=${{ matrix.bun_target }} \
+            --outfile=bundle/flowwhips-daemon
+
+      - name: Create tarball
+        run: |
+          cd bundle
+          tar czf ../flowwhips-daemon-${{ matrix.target }}.tar.gz flowwhips-daemon flowwhips-pty
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flowwhips-daemon-${{ matrix.target }}
+          path: flowwhips-daemon-${{ matrix.target }}.tar.gz
+
+  build-relay:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            bun_target: bun-linux-x64
+          - os: macos-latest
+            target: macos-arm64
+            bun_target: bun-darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Compile relay binary
+        run: |
+          bun build ./packages/relay/src/index.ts \
+            --compile \
+            --target=${{ matrix.bun_target }} \
+            --outfile=flowwhips-relay-${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flowwhips-relay-${{ matrix.target }}
+          path: flowwhips-relay-${{ matrix.target }}
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK
+        working-directory: packages/mobile
+        run: eas build --platform android --profile preview --no-wait
+
+  release:
+    needs: [build-cli, build-daemon, build-relay]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: false
+
+      - name: Generate changelog
+        run: |
+          echo "## Changes" > CHANGELOG.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> CHANGELOG.md 2>/dev/null || echo "- Initial release" >> CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG.md
+          draft: false
+          generate_release_notes: true
+          files: |
+            artifacts/flowwhips-*/flowwhips-*
+            artifacts/flowwhips-daemon-*/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
