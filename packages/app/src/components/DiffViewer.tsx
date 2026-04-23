@@ -12,13 +12,12 @@ interface DiffLine {
   lineNumber?: number;
 }
 
-export function DiffViewer({ oldContent, newContent, language = 'typescript' }: DiffViewerProps) {
+export function DiffViewer({ oldContent, newContent }: DiffViewerProps) {
   const diffLines = useMemo(() => {
     const oldLines = oldContent.split('\n');
     const newLines = newContent.split('\n');
     const result: DiffLine[] = [];
 
-    const maxLines = Math.max(oldLines.length, newLines.length);
     let i = 0;
     let j = 0;
 
@@ -94,7 +93,7 @@ export function DiffViewer({ oldContent, newContent, language = 'typescript' }: 
                 userSelect: 'none',
               }}
             >
-              {line.type === '+' ? '+' : line.type === '-' ? '-' : ' '}
+              {line.type === 'add' ? '+' : line.type === 'remove' ? '-' : ' '}
             </div>
             <pre
               style={{

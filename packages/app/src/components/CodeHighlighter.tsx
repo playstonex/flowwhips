@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { DiffViewer as DiffViewerBase } from './DiffViewer.js';
 
 interface CodeHighlighterProps {
