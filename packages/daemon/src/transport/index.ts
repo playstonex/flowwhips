@@ -33,21 +33,21 @@ export class Transport {
     const hostname = process.env.HOST || '0.0.0.0';
 
     this.server = Bun.serve<{ clientId: string }>({
-      fetch(req, server) {
+      fetch(req: Request, server: import('bun').Server) {
         if (server.upgrade(req)) {
           return;
         }
         return new Response('WebSocket expected', { status: 400 });
       },
       websocket: {
-        open(ws) {
+        open(ws: import('bun').ServerWebSocket<{ clientId: string }>) {
           const clientId = crypto.randomUUID();
           ws.data = { clientId };
           const client: Client = { id: clientId, ws, subscriptions: new Set() };
           clients.set(clientId, client);
           self.sendAgentList(clientId);
         },
-        message(ws, message) {
+        message(ws: import('bun').ServerWebSocket<{ clientId: string }>, message: string | Buffer) {
           const clientId = ws.data.clientId;
           try {
             const msg = JSON.parse(message.toString()) as ClientMessage;
@@ -56,7 +56,7 @@ export class Transport {
             self.send(clientId, { type: 'error', message: 'Invalid message format' });
           }
         },
-        close(ws) {
+        close(ws: import('bun').ServerWebSocket<{ clientId: string }>) {
           clients.delete(ws.data.clientId);
         },
       },

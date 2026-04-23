@@ -7,7 +7,6 @@ import {
   encrypt,
   decrypt,
   generateNonce,
-  keyToFingerprint,
 } from '@flowwhips/shared/crypto';
 
 const DEFAULT_PORT = 3230;
@@ -50,7 +49,7 @@ export class RelayServer {
     const self = this;
 
     this.server = Bun.serve<{ id: string }>({
-      fetch(req, server) {
+      fetch(req: Request, server: import('bun').Server<{ id: string }>) {
         const url = new URL(req.url);
 
         if (url.pathname === '/health') {
@@ -79,10 +78,10 @@ export class RelayServer {
         return new Response('Not found', { status: 404 });
       },
       websocket: {
-        open(ws) {
+        open(ws: import('bun').ServerWebSocket<{ id: string }>) {
           ws.send(JSON.stringify({ type: 'welcome', message: 'FlowWhips Relay v0.0.1' }));
         },
-        message(ws, message) {
+        message(ws: import('bun').ServerWebSocket<{ id: string }>, message: string | Buffer) {
           try {
             const msg = JSON.parse(message.toString());
             self.handleMessage(ws, msg);
@@ -90,7 +89,7 @@ export class RelayServer {
             ws.send(JSON.stringify({ type: 'error', message: 'Invalid message' }));
           }
         },
-        close(ws) {
+        close(ws: import('bun').ServerWebSocket<{ id: string }>) {
           self.handleDisconnect(ws);
         },
       },
@@ -252,7 +251,8 @@ export class RelayServer {
 
       const host = this.hosts.get(hostId);
       if (host) {
-        this.flushBufferToClient(host, ws);
+        const client = this.findClientById(clientId);
+        this.flushBufferToClient(host, client);
       }
     }
   }
@@ -340,16 +340,16 @@ export class RelayServer {
     }
   }
 
-  private flushBufferToClient(host: HostConnection, clientWs: Ws): void {
+  private flushBufferToClient(host: HostConnection, client: ClientConnection | undefined): void {
     const recent = host.messageBuffer.recent();
     for (const msg of recent) {
-      if (clientWs.readyState === OPEN) {
+      if (client?.ws.readyState === OPEN) {
         const parsed = JSON.parse(msg.data);
-        if (host.encryptionEnabled && clientWs.encryptionEnabled && host.sharedKey) {
+        if (host.encryptionEnabled && client.encryptionEnabled && host.sharedKey) {
           const encrypted = this.encryptPayload(parsed, host.sharedKey);
-          clientWs.send(JSON.stringify({ type: 'encrypted', payload: encrypted }));
+          client.ws.send(JSON.stringify({ type: 'encrypted', payload: encrypted }));
         } else {
-          clientWs.send(msg.data);
+          client.ws.send(msg.data);
         }
       }
     }
@@ -420,6 +420,10 @@ export class RelayServer {
       if (client.ws === ws) return client;
     }
     return undefined;
+  }
+
+  private findClientById(clientId: string): ClientConnection | undefined {
+    return this.clients.get(clientId);
   }
 }
 
