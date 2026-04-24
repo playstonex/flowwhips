@@ -1,0 +1,69 @@
+{
+  "fill" : {
+    "solid" : "srgb:0.08164,0.08969,0.08799,1.00000"
+  },
+  "groups" : [
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "blend-mode" : "darken",
+          "fill" : {
+            "solid" : "srgb:0.34824,1.00000,0.49570,1.00000"
+          },
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Code 2.png",
+          "name" : "Code 2",
+          "position" : {
+            "scale" : 1.55,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "solid" : "srgb:0.96291,0.97183,1.00000,1.00000"
+          },
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "connect.png",
+          "name" : "connect",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              -14.700520833333314,
+              19.843749999999943
+            ]
+          }
+        }
+      ],
+      "name" : "Group",
+      "position" : {
+        "scale" : 1.2,
+        "translation-in-points" : [
+          17.640625,
+          -23.8125
+        ]
+      },
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
