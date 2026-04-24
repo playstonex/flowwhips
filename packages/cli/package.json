@@ -1,11 +1,11 @@
 {
-  "name": "@flowwhips/cli",
+  "name": "@baton/cli",
   "version": "0.0.1",
-  "description": "FlowWhips CLI — control AI agents from the terminal",
+  "description": "Baton CLI — control AI agents from the terminal",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "flowwhips": "./dist/index.js"
+    "baton": "./dist/index.js"
   },
   "scripts": {
     "dev": "bun run --watch src/index.ts",
@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flowwhips/shared": "workspace:*"
+    "@baton/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

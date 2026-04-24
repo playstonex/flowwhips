@@ -7,7 +7,7 @@ import {
   encrypt,
   decrypt,
   generateNonce,
-} from '@flowwhips/shared/crypto';
+} from '@baton/shared/crypto';
 
 const DEFAULT_PORT = 3230;
 const OPEN = 1;
@@ -79,7 +79,7 @@ export class RelayServer {
       },
       websocket: {
         open(ws: import('bun').ServerWebSocket<{ id: string }>) {
-          ws.send(JSON.stringify({ type: 'welcome', message: 'FlowWhips Relay v0.0.1' }));
+          ws.send(JSON.stringify({ type: 'welcome', message: 'Baton Relay v0.0.1' }));
         },
         message(ws: import('bun').ServerWebSocket<{ id: string }>, message: string | Buffer) {
           try {
@@ -96,7 +96,7 @@ export class RelayServer {
       port: this.port,
     });
 
-    console.log(`\n  FlowWhips Relay v0.0.1`);
+    console.log(`\n  Baton Relay v0.0.1`);
     console.log(`  WebSocket: ws://localhost:${this.port}`);
     console.log(`  Health:    http://localhost:${this.port}/health\n`);
 

@@ -32,7 +32,7 @@ export function App() {
           flexShrink: 0,
         }}
       >
-        <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, whiteSpace: 'nowrap' }}>FlowWhips</h1>
+        <h1 style={{ fontSize: 16, fontWeight: 700, margin: 0, whiteSpace: 'nowrap' }}>Baton</h1>
         <nav style={{ display: 'flex', gap: 4 }}>
           <NavLink
             to="/"

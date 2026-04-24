@@ -7,7 +7,7 @@
 
 ## 一、评估背景
 
-FlowWhips 当前终端实现：
+Baton 当前终端实现：
 
 | 平台     | 实现                          | 文件                                              |
 | -------- | ----------------------------- | ------------------------------------------------- |
@@ -170,10 +170,10 @@ WebAssembly.instantiate(); // ⚠️ RN WASM 支持仍为实验性
 
 ### 理由
 
-1. **移动端无实质改进** — FlowWhips 的移动端是 Expo (React Native)，wterm 无法脱离 WebView 使用，替换后架构完全相同
+1. **移动端无实质改进** — Baton 的移动端是 Expo (React Native)，wterm 无法脱离 WebView 使用，替换后架构完全相同
 2. **xterm.js 生态成熟** — 大量 addons、广泛的 ANSI 兼容性、社区资源丰富，对于 Agent 输出流式文本足够
 3. **风险收益不对等** — wterm 体量优势在 WebView 场景下意义有限（WebView 本身已几十 MB），换来的是生态缺失和兼容性风险
-4. **FlowWhips 场景特性** — Agent 输出以结构化文本流为主（ParsedEvent），不是交互式 TUI，终端渲染不是瓶颈
+4. **Baton 场景特性** — Agent 输出以结构化文本流为主（ParsedEvent），不是交互式 TUI，终端渲染不是瓶颈
 5. **当前方案可用** — 二进制多路复用 ch1 + xterm.js 数据管道已完善
 
 ### 未来触发条件

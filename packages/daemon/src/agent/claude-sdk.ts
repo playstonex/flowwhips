@@ -1,4 +1,4 @@
-import type { AgentConfig, ParsedEvent, SdkAgentAdapter } from '@flowwhips/shared';
+import type { AgentConfig, ParsedEvent, SdkAgentAdapter } from '@baton/shared';
 import { execSync } from 'node:child_process';
 
 type SdkMessage = {

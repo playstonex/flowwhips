@@ -3,7 +3,7 @@ import type {
   ClientMessage,
   DaemonMessage,
   ParsedEvent,
-} from '@flowwhips/shared';
+} from '@baton/shared';
 
 type BunWebSocket = import('bun').ServerWebSocket<{ clientId: string }>;
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-FlowWhips is a remote AI agent orchestration platform — spawn, observe, and control coding agents (Claude Code, Codex, OpenCode) from a web UI, mobile app, or CLI. The daemon runs on the host, parses agent terminal output into structured events, and streams both raw PTY data and parsed events over WebSocket.
+Baton is a remote AI agent orchestration platform — spawn, observe, and control coding agents (Claude Code, Codex, OpenCode) from a web UI, mobile app, or CLI. The daemon runs on the host, parses agent terminal output into structured events, and streams both raw PTY data and parsed events over WebSocket.
 
 ## Monorepo layout
 
@@ -12,13 +12,13 @@ pnpm workspaces + Turborepo. Packages live under `packages/*`:
 
 | Package | Role | Dev runtime |
 |---|---|---|
-| `@flowwhips/shared` | Types, WS protocol, crypto, utils. Uses subpath exports (`./types`, `./protocol`, `./utils`, `./crypto`). | tsc only |
-| `@flowwhips/daemon` | Host process. Agent adapters, parser, transport, file watcher, orchestrator, MCP, Rust PTY bridge. HTTP 3210 / WS 3211. | **Bun** |
-| `@flowwhips/gateway` | JWT auth + 6-digit pairing. Uses `bun:sqlite`. Port 3220. | **Bun** |
-| `@flowwhips/relay` | WS relay for remote access with E2E NaCl box encryption. Port 3230. | **Bun** |
-| `@flowwhips/app` | React 19 + Vite web UI (xterm.js WebGL, Zustand, CodeMirror). Port 5173. | Node/Vite |
-| `@flowwhips/cli` | `flowwhips` binary — `daemon/agent/provider/pipeline/worktree` subcommands. | Bun (dev) |
-| `@flowwhips/mobile` | Expo RN app. **Not part of the Bun migration** — Expo toolchain stays on Node. | Expo/Node |
+| `@baton/shared` | Types, WS protocol, crypto, utils. Uses subpath exports (`./types`, `./protocol`, `./utils`, `./crypto`). | tsc only |
+| `@baton/daemon` | Host process. Agent adapters, parser, transport, file watcher, orchestrator, MCP, Rust PTY bridge. HTTP 3210 / WS 3211. | **Bun** |
+| `@baton/gateway` | JWT auth + 6-digit pairing. Uses `bun:sqlite`. Port 3220. | **Bun** |
+| `@baton/relay` | WS relay for remote access with E2E NaCl box encryption. Port 3230. | **Bun** |
+| `@baton/app` | React 19 + Vite web UI (xterm.js WebGL, Zustand, CodeMirror). Port 5173. | Node/Vite |
+| `@baton/cli` | `baton` binary — `daemon/agent/provider/pipeline/worktree` subcommands. | Bun (dev) |
+| `@baton/mobile` | Expo RN app. **Not part of the Bun migration** — Expo toolchain stays on Node. | Expo/Node |
 
 `extends/` contains reference projects (`paseo`, `lunel`, `open-claude-code`) for analysis only — not part of the build. The `paseo/CLAUDE.md` belongs to a different project; do not follow its rules here.
 
@@ -33,20 +33,20 @@ pnpm typecheck                            # turbo typecheck across all packages
 pnpm test                                 # vitest — note: daemon is excluded (needs Bun)
 pnpm lint                                 # eslint packages/*/src
 pnpm format                               # prettier write
-pnpm --filter @flowwhips/<pkg> <script>   # target one package
+pnpm --filter @baton/<pkg> <script>   # target one package
 
 # Single test file
 pnpm vitest run packages/shared/src/__tests__/agent-state.test.ts
 
 # Dev servers (run in separate terminals)
-pnpm --filter @flowwhips/daemon dev       # requires Bun + built Rust PTY
-pnpm --filter @flowwhips/app dev          # Vite, proxies /api → 3210, /ws → 3211
-pnpm --filter @flowwhips/gateway dev
-pnpm --filter @flowwhips/relay dev
+pnpm --filter @baton/daemon dev       # requires Bun + built Rust PTY
+pnpm --filter @baton/app dev          # Vite, proxies /api → 3210, /ws → 3211
+pnpm --filter @baton/gateway dev
+pnpm --filter @baton/relay dev
 
 # Build the Rust PTY binary (required before running daemon)
-pnpm --filter @flowwhips/daemon build:pty
-# → packages/daemon/pty/target/release/flowwhips-pty
+pnpm --filter @baton/daemon build:pty
+# → packages/daemon/pty/target/release/baton-pty
 ```
 
 ### Runtime split (important)
@@ -68,8 +68,8 @@ Browser/Mobile ──WS──► Relay (3230) ──WS──► Daemon (3210/321
 ### Daemon internals (`packages/daemon/src`)
 
 - `agent/` — `BaseAgentAdapter` subclasses per provider (`claude-code`, `claude-code-sdk`, `codex`, `opencode`). `createAdapter(type, mode)` picks PTY vs SDK; SDK mode uses `@anthropic-ai/claude-agent-sdk` when available.
-- `agent/manager.ts` — `AgentManager` owns lifecycle. **State machine**: every transition goes through `transition()` which checks `VALID_TRANSITIONS` from shared. States: `starting → initializing → running → {idle, thinking, executing, waiting_input, error} → stopped`. Emits `status_change` events and persists snapshots to `$FLOWWHIPS_HOME/agents/<hash>/<id>.json` (default `~/.flowwhips`). On startup, `restore()` loads snapshots and forces any non-stopped agent to `stopped` (crash recovery).
-- `pty/bridge.ts` — spawns the Rust PTY binary (`flowwhips-pty`) and talks to it over newline-delimited JSON on stdin/stdout. The bridge exposes an `IPty` interface (`write/resize/kill/onData/onExit`) that the manager treats opaquely. Expects the release binary at `pty/target/release/flowwhips-pty`.
+- `agent/manager.ts` — `AgentManager` owns lifecycle. **State machine**: every transition goes through `transition()` which checks `VALID_TRANSITIONS` from shared. States: `starting → initializing → running → {idle, thinking, executing, waiting_input, error} → stopped`. Emits `status_change` events and persists snapshots to `$BATON_HOME/agents/<hash>/<id>.json` (default `~/.baton`). On startup, `restore()` loads snapshots and forces any non-stopped agent to `stopped` (crash recovery).
+- `pty/bridge.ts` — spawns the Rust PTY binary (`baton-pty`) and talks to it over newline-delimited JSON on stdin/stdout. The bridge exposes an `IPty` interface (`write/resize/kill/onData/onExit`) that the manager treats opaquely. Expects the release binary at `pty/target/release/baton-pty`.
 - `parser/index.ts` — `ClaudeCodeParser.parse(raw)` strips ANSI then pattern-matches Claude Code's interactive output (tool-use markers `⏺/●/▸/→`, `Thinking…`, bash blocks, permission prompts, diffs, errors) into `ParsedEvent[]`. Raw PTY bytes are always preserved in `outputHistory` for terminal replay — parsing is additive, not destructive.
 - `transport/index.ts` — `Bun.serve` WebSocket on port+1. Clients subscribe per-session via `control/attach_session`. On attach, the server replays full `outputHistory` + `eventHistory` so reconnections don't lose context.
 - `transport/relay.ts` — outbound connection from daemon to a remote relay; forwards `ClientMessage` back to the local `AgentManager`.
@@ -85,7 +85,7 @@ Browser/Mobile ──WS──► Relay (3230) ──WS──► Daemon (3210/321
 - `crypto/` — tweetnacl wrappers: `generateKeyPair`, `deriveSharedKey`, `encrypt/decrypt` (xsalsa20-poly1305), `keyToFingerprint`. Used by relay for E2E encryption between host and client.
 - `retry/`, `errors/`, `tools/`, `utils/` — misc helpers. `VALID_TRANSITIONS` (state machine map) also lives here.
 
-Import from subpaths when you only need one area: `import { generateKeyPair } from '@flowwhips/shared/crypto'`.
+Import from subpaths when you only need one area: `import { generateKeyPair } from '@baton/shared/crypto'`.
 
 ### Web app (`packages/app/src`)
 
@@ -124,8 +124,8 @@ Freeing them during debugging: `lsof -ti:3210,3211,3220,3230,5173 | xargs kill`.
 ## Release artifacts
 
 `v*` tag triggers `release.yml`:
-- CLI → `bun build --compile` single-file binary (`flowwhips-<target>`).
-- Daemon → `flowwhips-daemon` + `flowwhips-pty` tarballed together (Rust PTY compiled in the same job).
+- CLI → `bun build --compile` single-file binary (`baton-<target>`).
+- Daemon → `baton-daemon` + `baton-pty` tarballed together (Rust PTY compiled in the same job).
 - Relay → compiled Bun binary.
 - Android → `eas build --platform android --profile preview`.
 

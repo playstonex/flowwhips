@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 import { useEventsStore } from '../stores/events.js';
 import { wsService } from '../services/websocket.js';
 

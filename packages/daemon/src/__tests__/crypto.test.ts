@@ -4,7 +4,7 @@ import { encrypt, decrypt, deriveKeyFromSecret, generateSessionKey } from '../cr
 describe('Crypto', () => {
   it('encrypts and decrypts roundtrip', () => {
     const key = generateSessionKey();
-    const plaintext = 'Hello, FlowWhips!';
+    const plaintext = 'Hello, Baton!';
     const encrypted = encrypt(plaintext, key);
     expect(encrypted).not.toBe(plaintext);
     expect(decrypt(encrypted, key)).toBe(plaintext);

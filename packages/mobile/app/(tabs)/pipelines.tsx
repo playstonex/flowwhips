@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
-import type { AgentType } from '@flowwhips/shared';
+import type { AgentType } from '@baton/shared';
 import { apiFetch } from '../../src/services/api';
 
 // Generate UUID for React Native

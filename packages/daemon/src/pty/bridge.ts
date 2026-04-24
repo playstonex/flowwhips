@@ -38,8 +38,8 @@ interface CellUpdate {
 function findPtyBinary(): string {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const candidates = [
-    join(__dirname, '..', '..', 'pty', 'target', 'release', 'flowwhips-pty'),
-    join(__dirname, '..', '..', 'pty', 'target', 'debug', 'flowwhips-pty'),
+    join(__dirname, '..', '..', 'pty', 'target', 'release', 'baton-pty'),
+    join(__dirname, '..', '..', 'pty', 'target', 'debug', 'baton-pty'),
   ];
   return candidates[0];
 }

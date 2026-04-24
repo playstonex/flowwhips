@@ -53,42 +53,42 @@ async function main() {
 
 function printHelp() {
   console.log(`
-  FlowWhips CLI v0.0.1
+  Baton CLI v0.0.1
 
   Usage:
-    flowwhips daemon start [--foreground]       Start the daemon
-    flowwhips daemon stop                        Stop the daemon
-    flowwhips daemon status                      Show daemon status
-    flowwhips daemon pair                        Generate QR pairing code
+    baton daemon start [--foreground]       Start the daemon
+    baton daemon stop                        Stop the daemon
+    baton daemon status                      Show daemon status
+    baton daemon pair                        Generate QR pairing code
 
-    flowwhips agent run <path> [--provider X]   Start an agent
-    flowwhips agent ls [-a]                      List agents
-    flowwhips agent attach <session-id>          Attach to terminal
-    flowwhips agent send <session-id> <msg>      Send input
-    flowwhips agent stop <session-id>            Stop an agent
-    flowwhips agent logs <session-id>            Show output history
-    flowwhips agent inspect <session-id>         Show agent details
+    baton agent run <path> [--provider X]   Start an agent
+    baton agent ls [-a]                      List agents
+    baton agent attach <session-id>          Attach to terminal
+    baton agent send <session-id> <msg>      Send input
+    baton agent stop <session-id>            Stop an agent
+    baton agent logs <session-id>            Show output history
+    baton agent inspect <session-id>         Show agent details
 
-    flowwhips provider ls                        List providers
-    flowwhips provider models <provider>         List models
+    baton provider ls                        List providers
+    baton provider models <provider>         List models
 
-    flowwhips pipeline create --name X --steps   Create pipeline
-    flowwhips pipeline run <id>                  Run pipeline
-    flowwhips pipeline ls                        List pipelines
+    baton pipeline create --name X --steps   Create pipeline
+    baton pipeline run <id>                  Run pipeline
+    baton pipeline ls                        List pipelines
 
-    flowwhips worktree ls                        List worktrees
-    flowwhips worktree create <path> --branch X  Create worktree
-    flowwhips worktree archive <path>            Archive worktree
+    baton worktree ls                        List worktrees
+    baton worktree create <path> --branch X  Create worktree
+    baton worktree archive <path>            Archive worktree
 
   Legacy shortcuts:
-    flowwhips start <path>     = agent run
-    flowwhips ls               = agent ls
-    flowwhips attach <id>      = agent attach
-    flowwhips send <id> <msg>  = agent send
-    flowwhips stop <id>        = agent stop
+    baton start <path>     = agent run
+    baton ls               = agent ls
+    baton attach <id>      = agent attach
+    baton send <id> <msg>  = agent send
+    baton stop <id>        = agent stop
 
   Environment:
-    FLOWWHIPS_URL   Daemon URL (default: http://localhost:3210)
+    BATON_URL   Daemon URL (default: http://localhost:3210)
 `);
 }
 

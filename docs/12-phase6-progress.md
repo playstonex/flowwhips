@@ -60,9 +60,9 @@ packages/
 ## CLI 新用法
 
 ```bash
-flowwhips agent run /path --mode sdk   # SDK 模式
-flowwhips agent run /path --mode auto  # 自动检测
-flowwhips agent run /path --mode pty    # PTY 模式（默认）
+baton agent run /path --mode sdk   # SDK 模式
+baton agent run /path --mode auto  # 自动检测
+baton agent run /path --mode pty    # PTY 模式（默认）
 ```
 
 ## 测试结果

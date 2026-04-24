@@ -21,7 +21,7 @@ export async function pipelineCommand(sub: string, args: string[]): Promise<void
       await pipelineRun(args[0]);
       break;
     default:
-      console.log(`Usage: flowwhips pipeline <ls|create|run>`);
+      console.log(`Usage: baton pipeline <ls|create|run>`);
   }
 }
 
@@ -50,7 +50,7 @@ async function pipelineCreate(args: string[]): Promise<void> {
 
   if (!stepsJson) {
     console.error(
-      'Usage: flowwhips pipeline create --name "review-fix" --steps \'[{"id":"s1","agentType":"claude-code","projectPath":"/path"}]\'',
+      'Usage: baton pipeline create --name "review-fix" --steps \'[{"id":"s1","agentType":"claude-code","projectPath":"/path"}]\'',
     );
     process.exit(1);
   }
@@ -69,7 +69,7 @@ async function pipelineCreate(args: string[]): Promise<void> {
 
 async function pipelineRun(id?: string): Promise<void> {
   if (!id) {
-    console.error('Usage: flowwhips pipeline run <pipeline-id>');
+    console.error('Usage: baton pipeline run <pipeline-id>');
     process.exit(1);
   }
   try {

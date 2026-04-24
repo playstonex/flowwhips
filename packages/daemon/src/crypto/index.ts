@@ -11,7 +11,7 @@ export interface EncryptionKeys {
 
 // Derive a shared AES-256 key from a pairing secret
 export function deriveKeyFromSecret(secret: string): Buffer {
-  return createHash('sha256').update(`flowwhips-${secret}`).digest();
+  return createHash('sha256').update(`baton-${secret}`).digest();
 }
 
 // Generate a random session key

@@ -1,4 +1,4 @@
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 import { stripAnsi } from './ansi.js';
 
 // Claude Code interactive mode output patterns

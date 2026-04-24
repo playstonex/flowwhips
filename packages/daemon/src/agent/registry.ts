@@ -5,14 +5,14 @@ import {
   EMPTY_PROVIDER_CONFIG,
   type ProviderConfig,
   type ProviderProfile,
-} from '@flowwhips/shared';
+} from '@baton/shared';
 
-function getFlowwhipsHome(): string {
-  return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+function getBatonHome(): string {
+  return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
 }
 
 async function getConfigPath(): Promise<string> {
-  const home = getFlowwhipsHome();
+  const home = getBatonHome();
   await mkdir(home, { recursive: true });
   return join(home, 'providers.json');
 }

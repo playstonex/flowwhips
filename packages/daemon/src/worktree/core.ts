@@ -17,12 +17,12 @@ export interface WorktreeInfo {
 
 const WORKTREES_DIR = 'worktrees';
 
-function getFlowwhipsHome(): string {
-  return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+function getBatonHome(): string {
+  return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
 }
 
 async function getIndexDir(): Promise<string> {
-  const dir = join(getFlowwhipsHome(), WORKTREES_DIR);
+  const dir = join(getBatonHome(), WORKTREES_DIR);
   await mkdir(dir, { recursive: true });
   return dir;
 }

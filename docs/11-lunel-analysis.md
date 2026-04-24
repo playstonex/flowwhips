@@ -1,8 +1,8 @@
-# Lunel 项目分析 — FlowWhips 可借鉴要点
+# Lunel 项目分析 — Baton 可借鉴要点
 
 > 分析日期: 2026-04-20
 > 分析对象: `extends/lunel` (GitHub: lunel-dev/lunel)
-> 分析目标: 识别 Lunel 中值得 FlowWhips 借鉴的架构模式、技术方案和功能特性
+> 分析目标: 识别 Lunel 中值得 Baton 借鉴的架构模式、技术方案和功能特性
 
 ---
 
@@ -12,9 +12,9 @@
 
 **核心定位**: 手机端远程开发 IDE，通过 WebSocket 将手机端 App 与本地 CLI 连接，实现在手机上编写代码、管理终端、集成 AI。
 
-### 与 FlowWhips 的相似性
+### 与 Baton 的相似性
 
-| 维度 | Lunel | FlowWhips |
+| 维度 | Lunel | Baton |
 |------|-------|-----------|
 | 核心功能 | 远程 IDE (手机操控 PC 编码) | 远程 AI Agent 编排 (手机/浏览器操控 Agent) |
 | 连接模式 | CLI ← WebSocket → Proxy ← WebSocket → App | Daemon ← WebSocket → Relay ← WebSocket → App |
@@ -41,7 +41,7 @@ Lunel:
                                         │ (Bun+SQLite)│      │  (Rust)   │
                                         └─────────────┘      └───────────┘
 
-FlowWhips:
+Baton:
 ┌──────────┐     WSS (JWT auth)     ┌──────────┐     WSS     ┌──────────┐
 │ React App│◄───────────────────────►│  Relay   │◄───────────►│  Daemon  │
 │  (Web)   │                         │ (port    │             │ (Hono)   │
@@ -58,7 +58,7 @@ FlowWhips:
 ### 关键架构差异
 
 1. **Lunel**: Manager + Proxy 分离（控制面 + 数据面），Manager 管理 session 路由、配对、审计
-2. **FlowWhips**: Relay + Gateway 分离（数据面 + 认证面），更简单但缺少统一管理
+2. **Baton**: Relay + Gateway 分离（数据面 + 认证面），更简单但缺少统一管理
 
 ---
 
@@ -83,7 +83,7 @@ if session.dirty.swap(false, Ordering::Relaxed) {
 }
 ```
 
-**FlowWhips 当前方案**: node-pty + xterm.js (WebGL)
+**Baton 当前方案**: node-pty + xterm.js (WebGL)
 **差距**: xterm.js 需要 client-side 渲染，占用浏览器资源；Rust PTY 在 server-side 渲染，只传输最终 cell grid。
 
 **借鉴建议**:
@@ -111,8 +111,8 @@ client_hello (pubkey) → server_hello (pubkey) → client_key (nonce + box + au
 // 之后所有消息都用 XChaCha20-Poly1305 加密
 ```
 
-**FlowWhips 当前方案**: AES-256-GCM + JWT 认证
-**差距**: FlowWhips 的加密在 Relay 层，不是真正的 E2E；中间人（Relay）可以看到明文。
+**Baton 当前方案**: AES-256-GCM + JWT 认证
+**差距**: Baton 的加密在 Relay 层，不是真正的 E2E；中间人（Relay）可以看到明文。
 
 **借鉴建议**:
 - 引入类似的双向密钥交换机制
@@ -135,7 +135,7 @@ client_hello (pubkey) → server_hello (pubkey) → client_key (nonce + box + au
 - 速率限制 (rate limiting) + 临时封禁 (temporary blocks)
 - Gateway 健康检查 + 自动摘除
 
-**FlowWhips 当前方案**: Gateway (auth) + Relay (data) 分离
+**Baton 当前方案**: Gateway (auth) + Relay (data) 分离
 **差距**: 缺少统一管理面、缺少审计/安全系统、缺少负载均衡
 
 **借鉴建议**:
@@ -169,7 +169,7 @@ interface PluginDefinition {
 }
 ```
 
-**FlowWhips 当前方案**: 固定组件布局 (Dashboard, Terminal, Files, Pipelines)
+**Baton 当前方案**: 固定组件布局 (Dashboard, Terminal, Files, Pipelines)
 **差距**: 不够灵活，添加新功能需要修改主布局
 
 **借鉴建议**:
@@ -200,7 +200,7 @@ interface AIProvider {
 }
 ```
 
-**FlowWhips 当前方案**: 各 Agent adapter 独立实现，没有统一接口
+**Baton 当前方案**: 各 Agent adapter 独立实现，没有统一接口
 **借鉴建议**: 抽象 `AgentProvider` 接口，统一所有 Agent (Claude Code, Codex, OpenCode) 的 API
 
 ---
@@ -214,7 +214,7 @@ interface AIProvider {
 - Password aliasing (session 密码迁移)
 - Resume token 机制，支持跨 gateway 重连
 
-**FlowWhips 当前方案**: JWT token 有过期时间，断连后需要重新配对
+**Baton 当前方案**: JWT token 有过期时间，断连后需要重新配对
 
 **借鉴建议**:
 - 添加 session 持久化 (CLI 端)
@@ -232,7 +232,7 @@ interface AIProvider {
 - 端口扫描与代理隧道 (port proxy tunneling)
 - 自动下载 PTY 二进制 (跨平台)
 
-**FlowWhips 可借鉴**:
+**Baton 可借鉴**:
 - 系统监控功能（在 Dashboard 中展示宿主机状态）
 - 端口代理隧道（让用户通过手机访问本地 dev server）
 
@@ -246,7 +246,7 @@ interface AIProvider {
 - 写入时抑制 (suppress watcher until 1.5s) 防止自触发
 - 引用计数 (openCount) 管理 watcher 生命周期
 
-**FlowWhips 可借鉴**:
+**Baton 可借鉴**:
 - 优化文件变更通知，减少不必要的 WebSocket 事件
 - 实现类似 watcher 抑制机制
 
@@ -254,14 +254,14 @@ interface AIProvider {
 
 ## 4. 技术栈对比
 
-| 技术 | Lunel | FlowWhips | 评估 |
+| 技术 | Lunel | Baton | 评估 |
 |------|-------|-----------|------|
 | Runtime | Node.js (CLI) + Bun (Proxy/Manager) | Node.js 22 | Bun 在 I/O 密集场景有性能优势 |
 | PTY | Rust (wezterm fork) | node-pty | Rust PTY 性能更好，渲染在 server 端 |
 | Mobile | Expo/React Native | React (Web) | 原生 App 体验更好 |
 | Database | SQLite (Manager) | SQLite (Gateway, Drizzle ORM) | 类似 |
 | 加密 | libsodium (XChaCha20-Poly1305) | AES-256-GCM (jose) | libsodium 更适合 E2E |
-| Build | Makefile | Turborepo + pnpm | FlowWhips 的 monorepo 管理更成熟 |
+| Build | Makefile | Turborepo + pnpm | Baton 的 monorepo 管理更成熟 |
 | Terminal | Custom cell grid renderer | xterm.js (WebGL) | xterm.js 功能更丰富但更重 |
 
 ---
@@ -320,7 +320,7 @@ interface AIProvider {
 
 ## 7. 总结
 
-Lunel 在以下方面领先于 FlowWhips：
+Lunel 在以下方面领先于 Baton：
 
 1. **终端性能**: Rust PTY + server-side 渲染 + 24fps 增量更新，远优于 node-pty + xterm.js
 2. **安全架构**: E2E 加密 + 4 步握手 + 二进制帧格式，安全性更高
@@ -328,7 +328,7 @@ Lunel 在以下方面领先于 FlowWhips：
 4. **前端架构**: 插件化设计，更灵活可扩展
 5. **AI 集成**: 统一 provider 接口，多后端同时运行
 
-FlowWhips 的优势在于：
+Baton 的优势在于：
 1. **Monorepo 管理**: Turborepo + pnpm 比 Makefile 更成熟
 2. **Pipeline 编排**: Agent 链式执行是独有功能
 3. **Agent 适配器**: 支持 Claude Code, Codex, OpenCode 三种 Agent

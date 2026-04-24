@@ -1,4 +1,4 @@
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 
 interface EventTimelineProps {
   events: ParsedEvent[];

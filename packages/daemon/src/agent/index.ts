@@ -6,7 +6,7 @@ export { OpenCodeAdapter } from './opencode.js';
 export { AgentManager } from './manager.js';
 export { ProviderRegistry } from './registry.js';
 
-import type { AgentType, AdapterMode } from '@flowwhips/shared';
+import type { AgentType, AdapterMode } from '@baton/shared';
 import { ClaudeCodeAdapter } from './claude-code.js';
 import { ClaudeSdkAdapter, claudeSdkAdapter } from './claude-sdk.js';
 import { CodexAdapter } from './codex.js';

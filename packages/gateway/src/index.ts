@@ -28,7 +28,7 @@ export function createGateway(port = DEFAULT_PORT): { app: Hono; db: Database; p
   app.use('*', logger());
   app.use('*', cors());
 
-  app.get('/api/health', (c) => c.json({ status: 'ok', service: 'flowwhips-gateway' }));
+  app.get('/api/health', (c) => c.json({ status: 'ok', service: 'baton-gateway' }));
 
   app.post('/api/v1/auth/host-token', async (c) => {
     await c.req.json<{ hostName?: string }>().catch(() => ({}));
@@ -104,7 +104,7 @@ export function main() {
   const { app } = createGateway(port);
 
   Bun.serve({ fetch: app.fetch, port });
-  console.log(`\n  FlowWhips Gateway v0.0.1`);
+  console.log(`\n  Baton Gateway v0.0.1`);
   console.log(`  HTTP: http://localhost:${port}\n`);
 }
 

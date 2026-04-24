@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import type { AgentProcess, AgentType } from '@flowwhips/shared';
+import type { AgentProcess, AgentType } from '@baton/shared';
 import { useAgentStore } from '../stores/connection.js';
 import { wsService } from '../services/websocket.js';
 import { SystemStats } from '../components/SystemStats.js';

@@ -22,7 +22,7 @@
 ### 保持当前优势
 
 ```
-FlowWhips 当前架构（比 Paseo 更清晰）:
+Baton 当前架构（比 Paseo 更清晰）:
 
 shared/ (独立类型包)     ← Paseo 无此包，类型散落各处
   ├── types/
@@ -131,16 +131,16 @@ server.tool("worktree_list", {}, async () => { ... });
 | 任务                     | 做法                                     | 工作量 |
 | ------------------------ | ---------------------------------------- | ------ |
 | **完整 CLI**             | Docker-style 命令设计                    | 3 天   |
-| **自定义 Provider 系统** | `~/.flowwhips/providers.json` + zod 验证 | 2 天   |
+| **自定义 Provider 系统** | `~/.baton/providers.json` + zod 验证 | 2 天   |
 
 CLI 目标命令集：
 
 ```bash
-flowwhips daemon start/stop/status/pair
-flowwhips agent ls/run/stop/attach/send/logs/inspect
-flowwhips provider ls/models
-flowwhips worktree ls/create/archive
-flowwhips pipeline create/run/ls
+baton daemon start/stop/status/pair
+baton agent ls/run/stop/attach/send/logs/inspect
+baton provider ls/models
+baton worktree ls/create/archive
+baton pipeline create/run/ls
 ```
 
 Provider 配置设计（Zod 验证）：
@@ -186,7 +186,7 @@ const ProviderConfigSchema = z.object({
 
 ## 四、相比 Paseo 的后发优势
 
-| 方面            | Paseo 的做法         | FlowWhips 更优方案                          |
+| 方面            | Paseo 的做法         | Baton 更优方案                          |
 | --------------- | -------------------- | ------------------------------------------- |
 | **运行时**      | Node.js              | ✅ Bun（启动快 5x，测试快 3x）              |
 | **包管理**      | npm workspaces       | ✅ pnpm + Turborepo（更快）                 |
@@ -231,8 +231,8 @@ packages/desktop/
 ### 最高性价比 — Bun compile 单二进制
 
 ```bash
-bun build --compile ./src/index.ts --outfile flowwhips
-# 用户: brew install flowwhips → flowwhips daemon start → 浏览器自动打开
+bun build --compile ./src/index.ts --outfile baton
+# 用户: brew install baton → baton daemon start → 浏览器自动打开
 ```
 
 零 GUI 开发成本，用户体验已经很好。

@@ -10,7 +10,7 @@ export async function providerCommand(sub: string, args: string[]): Promise<void
       await providerModels(args[0]);
       break;
     default:
-      console.log(`Usage: flowwhips provider <ls|models>`);
+      console.log(`Usage: baton provider <ls|models>`);
   }
 }
 
@@ -35,5 +35,5 @@ async function providerList(): Promise<void> {
 
 async function providerModels(_provider?: string): Promise<void> {
   console.log('Provider models: requires daemon connection with provider config.');
-  console.log('Configure providers in ~/.flowwhips/providers.json');
+  console.log('Configure providers in ~/.baton/providers.json');
 }

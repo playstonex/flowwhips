@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { AgentProcess, AgentStatus } from '@flowwhips/shared';
+import type { AgentProcess, AgentStatus } from '@baton/shared';
 
 interface AgentState {
   agents: AgentProcess[];

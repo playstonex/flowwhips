@@ -1,4 +1,4 @@
-import type { AgentAdapter, AgentConfig, AgentType, ParsedEvent, SpawnConfig } from '@flowwhips/shared';
+import type { AgentAdapter, AgentConfig, AgentType, ParsedEvent, SpawnConfig } from '@baton/shared';
 
 export abstract class BaseAgentAdapter implements AgentAdapter {
   abstract readonly name: string;

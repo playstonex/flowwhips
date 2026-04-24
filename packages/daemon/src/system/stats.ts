@@ -1,6 +1,6 @@
 import os from 'node:os';
 import { execSync } from 'node:child_process';
-import type { SystemStats } from '@flowwhips/shared/types';
+import type { SystemStats } from '@baton/shared/types';
 
 function getDiskUsage(): { used: number; total: number; percentage: number } {
   try {

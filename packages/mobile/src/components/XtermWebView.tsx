@@ -49,7 +49,7 @@ function buildHtml(): string {
       term.onData(function(data) {
         notify({ type: 'input', data: data });
       });
-      term.writeln('\\x1b[32mFlowWhips Terminal\\x1b[0m');
+      term.writeln('\\x1b[32mBaton Terminal\\x1b[0m');
       term.writeln('\\x1b[90mWaiting for agent output...\\x1b[0m');
       term.writeln('');
       window._termWrite = function(data) { term.write(data); };

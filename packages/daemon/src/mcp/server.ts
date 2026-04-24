@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { AgentManager } from '../agent/manager.js';
-import type { BuiltTool, ToolContext } from '@flowwhips/shared';
+import type { BuiltTool, ToolContext } from '@baton/shared';
 import { agentTools } from './tools/agent-tools.js';
 import { worktreeTools } from './tools/worktree.js';
 import { providerTools } from './tools/provider.js';
@@ -22,7 +22,7 @@ function registerTool(server: McpServer, tool: BuiltTool, context: ToolContext):
 
 export function createMcpServer(agentManager: AgentManager): McpServer {
   const server = new McpServer({
-    name: 'flowwhips-daemon',
+    name: 'baton-daemon',
     version: '0.1.0',
   });
 
@@ -67,5 +67,5 @@ export async function startMcpServer(agentManager: AgentManager): Promise<void> 
   await connectExternalMcpServers(server);
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('FlowWhips MCP Server started (stdio transport)');
+  console.error('Baton MCP Server started (stdio transport)');
 }

@@ -42,7 +42,7 @@ describe('NaCl Crypto', () => {
     const shared = deriveSharedKey(alice.publicKey, bob.secretKey);
 
     const nonce = generateNonce();
-    const plaintext = new TextEncoder().encode('Hello, FlowWhips E2EE!');
+    const plaintext = new TextEncoder().encode('Hello, Baton E2EE!');
 
     const ciphertext = encrypt(plaintext, nonce, shared);
     expect(ciphertext).not.toBeNull();
@@ -50,7 +50,7 @@ describe('NaCl Crypto', () => {
 
     const decrypted = decrypt(ciphertext!, nonce, shared);
     expect(decrypted).not.toBeNull();
-    expect(new TextDecoder().decode(decrypted!)).toBe('Hello, FlowWhips E2EE!');
+    expect(new TextDecoder().decode(decrypted!)).toBe('Hello, Baton E2EE!');
   });
 
   it('returns null when decrypting with wrong key', () => {

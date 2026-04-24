@@ -1,5 +1,5 @@
 import { watch } from 'chokidar';
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 
 export interface FileWatcherOptions {
   projectPath: string;

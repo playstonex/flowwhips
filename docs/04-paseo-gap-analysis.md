@@ -1,13 +1,13 @@
-# FlowWhips vs Paseo 差距分析
+# Baton vs Paseo 差距分析
 
 > 分析日期：2026-04-18
-> Paseo 版本：0.1.60-rc.1 | FlowWhips 版本：0.0.1
+> Paseo 版本：0.1.60-rc.1 | Baton 版本：0.0.1
 
 ---
 
 ## 一、规模对比
 
-| 指标             | FlowWhips  | Paseo                                       |
+| 指标             | Baton  | Paseo                                       |
 | ---------------- | ---------- | ------------------------------------------- |
 | **版本**         | `0.0.1`    | `0.1.60-rc.1`                               |
 | **包数量**       | 7          | 8                                           |
@@ -24,19 +24,19 @@
 
 ### 对应关系
 
-| FlowWhips          | Paseo                | 差距                                          |
+| Baton          | Paseo                | 差距                                          |
 | ------------------ | -------------------- | --------------------------------------------- |
-| `shared`           | (内置在 server/app)  | FlowWhips 有独立 shared 包，更清晰            |
+| `shared`           | (内置在 server/app)  | Baton 有独立 shared 包，更清晰            |
 | `daemon`           | `server`             | **巨大差距**                                  |
 | `relay`            | `relay`              | **巨大差距** — 无 E2EE                        |
-| `gateway`          | (内置在 server)      | FlowWhips 独立拆分，Paseo 合并到 server       |
+| `gateway`          | (内置在 server)      | Baton 独立拆分，Paseo 合并到 server       |
 | `app` (React+Vite) | `app` (Expo)         | **巨大差距**                                  |
 | `cli`              | `cli`                | **巨大差距**                                  |
 | `mobile` (Expo)    | `app` (同一包)       | Paseo 用同一个 Expo 包覆盖 web+native+desktop |
-| —                  | `desktop` (Electron) | **FlowWhips 无对应**                          |
-| —                  | `expo-two-way-audio` | **FlowWhips 无对应**                          |
-| —                  | `highlight` (Lezer)  | **FlowWhips 无对应**                          |
-| —                  | `website`            | **FlowWhips 无对应**                          |
+| —                  | `desktop` (Electron) | **Baton 无对应**                          |
+| —                  | `expo-two-way-audio` | **Baton 无对应**                          |
+| —                  | `highlight` (Lezer)  | **Baton 无对应**                          |
+| —                  | `website`            | **Baton 无对应**                          |
 
 ### 各包详情
 
@@ -140,7 +140,7 @@ src/
 
 ### 🔴 严重（核心功能缺失）
 
-| #   | 功能                  | Paseo 现状                                                                     | FlowWhips 现状                  |
+| #   | 功能                  | Paseo 现状                                                                     | Baton 现状                  |
 | --- | --------------------- | ------------------------------------------------------------------------------ | ------------------------------- |
 | 1   | **E2E 加密中继**      | NaCl box (XSalsa20-Poly1305) + ECDH 密钥交换，relay 零知识                     | 无加密 — 纯 WebSocket 转发      |
 | 2   | **MCP Server**        | ~1800 行完整实现，支持 create/list/stop agent、run prompt、worktree 管理       | 零代码 — 文档中提到但完全没实现 |
@@ -151,7 +151,7 @@ src/
 
 ### 🟠 重要（差异化功能缺失）
 
-| #   | 功能                     | Paseo 现状                                                                            | FlowWhips 现状                        |
+| #   | 功能                     | Paseo 现状                                                                            | Baton 现状                        |
 | --- | ------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------- |
 | 7   | **桌面应用 (Electron)**  | 完整 Electron 包装，自动启动 daemon，原生文件对话框，自动更新                         | 无                                    |
 | 8   | **完整 CLI**             | 30+ 子命令 (agent/daemon/provider/worktree/permit/chat/schedule/loop/speech/terminal) | 5 个基础命令                          |
@@ -165,7 +165,7 @@ src/
 
 ### 🟡 中等（完善度差距）
 
-| #   | 功能               | Paseo 现状                                                                         | FlowWhips 现状                 |
+| #   | 功能               | Paseo 现状                                                                         | Baton 现状                 |
 | --- | ------------------ | ---------------------------------------------------------------------------------- | ------------------------------ |
 | 16  | **文档深度**       | 17 个文档：ARCHITECTURE/CODING_STANDARDS/TESTING/SECURITY/RELEASE 等               | 3 个文档                       |
 | 17  | **测试覆盖**       | server 有 unit + integration + e2e 测试，app 有 Playwright e2e                     | 仅 daemon 和 shared 有基础测试 |
@@ -196,7 +196,7 @@ Paseo 架构:
                     │  (port 6767)│
                     └─────────────┘
 
-FlowWhips 架构:
+Baton 架构:
 ┌─────────┐  ┌──────────┐
 │ Web App  │  │  Mobile  │  ← 独立包
 │ (React)  │  │  (Expo)  │
@@ -219,11 +219,11 @@ FlowWhips 架构:
 **关键架构差异：**
 
 - Paseo: 扁平 — server 包含 gateway + daemon 功能，app 一个包覆盖所有平台
-- FlowWhips: 拆分 — gateway/daemon/relay 各自独立，app/mobile 分开（更清晰）
+- Baton: 拆分 — gateway/daemon/relay 各自独立，app/mobile 分开（更清晰）
 
 ---
 
-## 五、FlowWhips 的优势
+## 五、Baton 的优势
 
 | 优势                  | 详情                                                  |
 | --------------------- | ----------------------------------------------------- |

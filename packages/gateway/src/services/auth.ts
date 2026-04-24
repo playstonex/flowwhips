@@ -1,11 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'flowwhips-dev-secret-change-in-production',
+  process.env.JWT_SECRET ?? 'baton-dev-secret-change-in-production',
 );
 
-const JWT_ISSUER = 'flowwhips';
-const JWT_AUDIENCE = 'flowwhips-relay';
+const JWT_ISSUER = 'baton';
+const JWT_AUDIENCE = 'baton-relay';
 
 export interface TokenPayload {
   sub: string; // hostId or userId

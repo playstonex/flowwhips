@@ -121,7 +121,7 @@ bun test                                    # 替代 vitest
 
 #### 2. 共享类型系统 — TypeScript 完胜
 
-当前 FlowWhips 的 7 个包中，4 个必须是 TypeScript：
+当前 Baton 的 7 个包中，4 个必须是 TypeScript：
 
 | 包              | 为什么必须 TS    |
 | --------------- | ---------------- |
@@ -141,9 +141,9 @@ bun test                                    # 替代 vitest
 | JWT 验证              | ~2ms         | ~0.5ms     | 无           |
 | **AI agent 一次响应** | **5-120s**   | **5-120s** | **一样**     |
 
-#### 4. Rust/Go 真正有优势的场景（FlowWhips 不需要）
+#### 4. Rust/Go 真正有优势的场景（Baton 不需要）
 
-| Rust/Go 优势   | FlowWhips 需要吗                  |
+| Rust/Go 优势   | Baton 需要吗                  |
 | -------------- | --------------------------------- |
 | 百万级并发连接 | ❌ 几十个 agent 就够了            |
 | 单二进制部署   | ⚠️ 不错，但 Bun compile 也能解决  |
@@ -152,7 +152,7 @@ bun test                                    # 替代 vitest
 
 ### 如果未来真要换
 
-唯一合理场景：**daemon 做成独立二进制发行**（用户 `brew install flowwhips` 不需要装 Node.js）。
+唯一合理场景：**daemon 做成独立二进制发行**（用户 `brew install baton` 不需要装 Node.js）。
 
 路径：
 

@@ -1,4 +1,4 @@
-# FlowWhips Debug Logs
+# Baton Debug Logs
 # Generated: 2026-04-23
 
 ## System Info
@@ -12,7 +12,7 @@ Running on ports:
 - WebSocket: ws://192.168.31.102:3211
 
 ## iOS Connection Instructions
-1. Open FlowWhips app on iPhone
+1. Open Baton app on iPhone
 2. Go to Settings tab
 3. Select "Local" mode (not "Remote")
 4. Enter HTTP URL: http://192.168.31.102:3210

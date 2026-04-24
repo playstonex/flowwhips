@@ -15,7 +15,7 @@ export async function daemonCommand(sub: string, _args: string[]): Promise<void>
       await daemonPair();
       break;
     default:
-      console.log(`Usage: flowwhips daemon <start|stop|status|pair>`);
+      console.log(`Usage: baton daemon <start|stop|status|pair>`);
   }
 }
 
@@ -32,7 +32,7 @@ async function daemonStart(args: string[]): Promise<void> {
     const health = await apiFetch<{ status: string }>('/api/health');
     console.log(`Daemon already running (status: ${health.status})`);
   } catch {
-    console.log(`Daemon not running. Start it with: pnpm --filter @flowwhips/daemon dev`);
+    console.log(`Daemon not running. Start it with: pnpm --filter @baton/daemon dev`);
   }
 }
 
@@ -74,7 +74,7 @@ async function daemonPair(): Promise<void> {
     console.log(`\nPairing QR Code generated:`);
     console.log(`Fingerprint: ${data.fingerprint}`);
     console.log(`Relay:       ${data.relayUrl}`);
-    console.log(`\nScan the QR code in the FlowWhips mobile app.\n`);
+    console.log(`\nScan the QR code in the Baton mobile app.\n`);
     console.log(data.qr);
   } catch (err) {
     console.error('Failed to generate pairing QR:', err instanceof Error ? err.message : err);

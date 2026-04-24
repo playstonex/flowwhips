@@ -1,5 +1,5 @@
 {
-  "name": "@flowwhips/mobile",
+  "name": "@baton/mobile",
   "version": "0.0.1",
   "private": true,
   "main": "index.js",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.10",
-    "@flowwhips/shared": "workspace:*",
+    "@baton/shared": "workspace:*",
     "@react-navigation/bottom-tabs": "~7.15.9",
     "@react-navigation/native": "~7.2.2",
     "expo": "~55.0.17",

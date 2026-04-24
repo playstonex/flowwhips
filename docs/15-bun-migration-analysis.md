@@ -1,4 +1,4 @@
-# FlowWhips Bun 迁移可行性分析
+# Baton Bun 迁移可行性分析
 
 > 日期：2026-04-22
 > 前提：使用 Rust PTY (wezterm fork) 替代 node-pty

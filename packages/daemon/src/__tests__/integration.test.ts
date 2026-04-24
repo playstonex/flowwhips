@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateKeyPair, deriveSharedKey, encrypt, decrypt, generateNonce } from '@flowwhips/shared/crypto';
+import { generateKeyPair, deriveSharedKey, encrypt, decrypt, generateNonce } from '@baton/shared/crypto';
 
 function encryptPayload(msg: Record<string, unknown>, sharedKey: Uint8Array): string {
   const plaintext = new TextEncoder().encode(JSON.stringify(msg));

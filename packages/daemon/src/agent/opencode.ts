@@ -1,4 +1,4 @@
-import type { AgentConfig, ParsedEvent, SpawnConfig } from '@flowwhips/shared';
+import type { AgentConfig, ParsedEvent, SpawnConfig } from '@baton/shared';
 import { BaseAgentAdapter } from './adapter.js';
 import { stripAnsi } from '../parser/ansi.js';
 import { execSync } from 'node:child_process';

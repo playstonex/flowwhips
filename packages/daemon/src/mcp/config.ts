@@ -21,12 +21,12 @@ export type McpClientConfig = z.infer<typeof McpClientConfigSchema>;
 
 export const EMPTY_MCP_CLIENT_CONFIG: McpClientConfig = { servers: {} };
 
-function getFlowwhipsHome(): string {
-  return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+function getBatonHome(): string {
+  return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
 }
 
 async function getMcpServersPath(): Promise<string> {
-  const home = getFlowwhipsHome();
+  const home = getBatonHome();
   await mkdir(home, { recursive: true });
   return join(home, 'mcp-servers.json');
 }

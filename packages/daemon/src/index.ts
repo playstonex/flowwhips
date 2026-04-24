@@ -4,7 +4,7 @@ import { join, basename, extname } from 'node:path';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import QRCode from 'qrcode';
-import { generateKeyPair, keyToFingerprint } from '@flowwhips/shared';
+import { generateKeyPair, keyToFingerprint } from '@baton/shared';
 import { AgentManager } from './agent/manager.js';
 import { createAdapter, ProviderRegistry } from './agent/index.js';
 import { Transport } from './transport/index.js';
@@ -18,7 +18,7 @@ import type {
   ParsedEvent,
   ClientMessage,
   DaemonMessage,
-} from '@flowwhips/shared';
+} from '@baton/shared';
 
 const DEFAULT_PORT = 3210;
 
@@ -353,7 +353,7 @@ export async function main() {
   });
 
   const localIp = getLocalIp();
-  console.log(`\n  FlowWhips Daemon v0.0.1`);
+  console.log(`\n  Baton Daemon v0.0.1`);
   console.log(`  HTTP:      http://${hostname}:${port}`);
   console.log(`  WebSocket: ws://${hostname}:${port + 1}`);
   if (localIp && hostname === '0.0.0.0') {

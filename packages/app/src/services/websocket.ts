@@ -1,5 +1,5 @@
-import type { DaemonMessage } from '@flowwhips/shared';
-import { Channel, decodeFrame, decodeJsonFrame } from '@flowwhips/shared/protocol';
+import type { DaemonMessage } from '@baton/shared';
+import { Channel, decodeFrame, decodeJsonFrame } from '@baton/shared/protocol';
 
 type MessageHandler = (msg: DaemonMessage) => void;
 

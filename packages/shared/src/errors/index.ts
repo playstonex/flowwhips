@@ -1,4 +1,4 @@
-export class FlowWhipsError extends Error {
+export class BatonError extends Error {
   readonly code: string;
 
   constructor(message: string, code: string) {
@@ -8,7 +8,7 @@ export class FlowWhipsError extends Error {
   }
 }
 
-export class ShellError extends FlowWhipsError {
+export class ShellError extends BatonError {
   readonly stdout: string;
   readonly stderr: string;
   readonly exitCode: number;
@@ -21,19 +21,19 @@ export class ShellError extends FlowWhipsError {
   }
 }
 
-export class CryptoError extends FlowWhipsError {
+export class CryptoError extends BatonError {
   constructor(message: string) {
     super(message, 'CRYPTO_ERROR');
   }
 }
 
-export class ProtocolError extends FlowWhipsError {
+export class ProtocolError extends BatonError {
   constructor(message: string) {
     super(message, 'PROTOCOL_ERROR');
   }
 }
 
-export class ConfigError extends FlowWhipsError {
+export class ConfigError extends BatonError {
   readonly filePath?: string;
 
   constructor(message: string, filePath?: string) {
@@ -42,7 +42,7 @@ export class ConfigError extends FlowWhipsError {
   }
 }
 
-export class McpError extends FlowWhipsError {
+export class McpError extends BatonError {
   readonly serverName?: string;
 
   constructor(message: string, serverName?: string) {
@@ -51,13 +51,13 @@ export class McpError extends FlowWhipsError {
   }
 }
 
-export class TransportError extends FlowWhipsError {
+export class TransportError extends BatonError {
   constructor(message: string) {
     super(message, 'TRANSPORT_ERROR');
   }
 }
 
-export class AgentNotFoundError extends FlowWhipsError {
+export class AgentNotFoundError extends BatonError {
   readonly agentId: string;
 
   constructor(agentId: string) {
@@ -66,7 +66,7 @@ export class AgentNotFoundError extends FlowWhipsError {
   }
 }
 
-export class InvalidStateTransitionError extends FlowWhipsError {
+export class InvalidStateTransitionError extends BatonError {
   readonly from: string;
   readonly to: string;
 

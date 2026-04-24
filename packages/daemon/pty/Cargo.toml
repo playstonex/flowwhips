@@ -1,10 +1,10 @@
 [package]
-name = "flowwhips-pty"
+name = "baton-pty"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "flowwhips-pty"
+name = "baton-pty"
 path = "src/main.rs"
 
 [dependencies]

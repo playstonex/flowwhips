@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { AgentType } from '@flowwhips/shared';
+import type { AgentType } from '@baton/shared';
 
 interface PipelineStep {
   id: string;

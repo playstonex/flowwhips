@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { buildTool, toolResult, toolError, type BuiltTool } from '@flowwhips/shared';
+import { buildTool, toolResult, toolError, type BuiltTool } from '@baton/shared';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -19,12 +19,12 @@ export interface WorktreeInfo {
 
 const WORKTREES_DIR = 'worktrees';
 
-function getFlowwhipsHome(): string {
-  return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+function getBatonHome(): string {
+  return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
 }
 
 async function listWorktrees(): Promise<WorktreeInfo[]> {
-  const home = getFlowwhipsHome();
+  const home = getBatonHome();
   const indexFile = join(home, `${WORKTREES_DIR}/index.json`);
   try {
     const data = await readFile(indexFile, 'utf-8');
@@ -35,7 +35,7 @@ async function listWorktrees(): Promise<WorktreeInfo[]> {
 }
 
 async function saveWorktreeIndex(worktrees: WorktreeInfo[]): Promise<void> {
-  const home = getFlowwhipsHome();
+  const home = getBatonHome();
   const dir = join(home, WORKTREES_DIR);
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, 'index.json'), JSON.stringify(worktrees, null, 2));

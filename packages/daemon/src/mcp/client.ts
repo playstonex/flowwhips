@@ -63,7 +63,7 @@ export class McpClientManager {
     }
 
     const client = new Client({
-      name: 'flowwhips-daemon',
+      name: 'baton-daemon',
       version: '0.1.0',
     });
 

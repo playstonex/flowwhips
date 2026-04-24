@@ -1,6 +1,6 @@
-import type { AgentConfig, AgentProcess, ParsedEvent } from '@flowwhips/shared';
-import { VALID_TRANSITIONS, generateId } from '@flowwhips/shared';
-import type { AgentState, AgentSnapshot, TimelineItem } from '@flowwhips/shared';
+import type { AgentConfig, AgentProcess, ParsedEvent } from '@baton/shared';
+import { VALID_TRANSITIONS, generateId } from '@baton/shared';
+import type { AgentState, AgentSnapshot, TimelineItem } from '@baton/shared';
 import type { BaseAgentAdapter } from './adapter.js';
 import { spawnPty } from '../pty/bridge.js';
 import { mkdir, writeFile, readdir, stat, readFile, access } from 'node:fs/promises';
@@ -113,8 +113,8 @@ export class AgentManager {
 
   // ── Persistence ────────────────────────────────────────────────
 
-  private get flowwhipsHome(): string {
-    return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+  private get batonHome(): string {
+    return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
   }
 
   private hashPath(projectPath: string): string {
@@ -128,7 +128,7 @@ export class AgentManager {
 
   private snapshotPath(id: string, projectPath: string): string {
     const hash = this.hashPath(projectPath);
-    return join(this.flowwhipsHome, 'agents', hash, `${id}.json`);
+    return join(this.batonHome, 'agents', hash, `${id}.json`);
   }
 
   private async persist(id: string): Promise<void> {
@@ -157,7 +157,7 @@ export class AgentManager {
   }
 
   async restore(): Promise<void> {
-    const agentsDir = join(this.flowwhipsHome, 'agents');
+    const agentsDir = join(this.batonHome, 'agents');
     try {
       await access(agentsDir);
     } catch {

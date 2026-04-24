@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 
 interface EventsState {
   events: ParsedEvent[];

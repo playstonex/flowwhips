@@ -1,4 +1,4 @@
-# FlowWhips 技术架构
+# Baton 技术架构
 
 ## 一、系统总览
 
@@ -416,4 +416,4 @@ interface MCPToolRegistration {
 }
 ```
 
-FlowWhips 自身作为 MCP Client，可以为 Agent 提供额外的工具（如远程通知、审批流、文件浏览）。
+Baton 自身作为 MCP Client，可以为 Agent 提供额外的工具（如远程通知、审批流、文件浏览）。

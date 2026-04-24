@@ -35,7 +35,7 @@ export async function agentCommand(sub: string, args: string[]): Promise<void> {
       await agentInspect(args[0]);
       break;
     default:
-      console.log(`Usage: flowwhips agent <ls|run|stop|attach|send|logs|inspect>`);
+      console.log(`Usage: baton agent <ls|run|stop|attach|send|logs|inspect>`);
   }
 }
 
@@ -67,7 +67,7 @@ async function agentRun(args: string[]): Promise<void> {
   const projectPath = args.find((a) => !a.startsWith('-'));
   if (!projectPath) {
     console.error(
-      'Usage: flowwhips agent run <project-path> [--provider claude-code] [--mode pty|sdk|auto] [--prompt "..."]',
+      'Usage: baton agent run <project-path> [--provider claude-code] [--mode pty|sdk|auto] [--prompt "..."]',
     );
     process.exit(1);
   }
@@ -90,9 +90,9 @@ async function agentRun(args: string[]): Promise<void> {
       },
     );
     console.log(`Agent started: ${data.sessionId} (${provider}, ${mode ?? 'pty'})`);
-    console.log(`  Attach:  flowwhips agent attach ${data.sessionId}`);
-    console.log(`  Send:    flowwhips agent send ${data.sessionId} "your message"`);
-    console.log(`  Stop:    flowwhips agent stop ${data.sessionId}`);
+    console.log(`  Attach:  baton agent attach ${data.sessionId}`);
+    console.log(`  Send:    baton agent send ${data.sessionId} "your message"`);
+    console.log(`  Stop:    baton agent stop ${data.sessionId}`);
   } catch (err) {
     console.error(`Failed: ${err instanceof Error ? err.message : err}`);
     process.exit(1);
@@ -101,7 +101,7 @@ async function agentRun(args: string[]): Promise<void> {
 
 async function agentStop(sessionId?: string): Promise<void> {
   if (!sessionId) {
-    console.error('Usage: flowwhips agent stop <session-id>');
+    console.error('Usage: baton agent stop <session-id>');
     process.exit(1);
   }
   try {
@@ -114,7 +114,7 @@ async function agentStop(sessionId?: string): Promise<void> {
 
 async function agentAttach(sessionId?: string): Promise<void> {
   if (!sessionId) {
-    console.error('Usage: flowwhips agent attach <session-id>');
+    console.error('Usage: baton agent attach <session-id>');
     process.exit(1);
   }
 
@@ -148,7 +148,7 @@ async function agentAttach(sessionId?: string): Promise<void> {
 
 async function agentSend(sessionId?: string, message?: string): Promise<void> {
   if (!sessionId || !message) {
-    console.error('Usage: flowwhips agent send <session-id> <message>');
+    console.error('Usage: baton agent send <session-id> <message>');
     process.exit(1);
   }
 
@@ -164,7 +164,7 @@ async function agentSend(sessionId?: string, message?: string): Promise<void> {
 
 async function agentLogs(sessionId?: string): Promise<void> {
   if (!sessionId) {
-    console.error('Usage: flowwhips agent logs <session-id>');
+    console.error('Usage: baton agent logs <session-id>');
     process.exit(1);
   }
   try {
@@ -179,7 +179,7 @@ async function agentLogs(sessionId?: string): Promise<void> {
 
 async function agentInspect(sessionId?: string): Promise<void> {
   if (!sessionId) {
-    console.error('Usage: flowwhips agent inspect <session-id>');
+    console.error('Usage: baton agent inspect <session-id>');
     process.exit(1);
   }
   try {

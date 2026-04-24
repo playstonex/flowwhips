@@ -1,19 +1,19 @@
 import { z } from 'zod';
-import { buildTool, toolResult, toolError, type BuiltTool } from '@flowwhips/shared';
+import { buildTool, toolResult, toolError, type BuiltTool } from '@baton/shared';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   ProviderConfigSchema,
   EMPTY_PROVIDER_CONFIG,
   type ProviderConfig,
-} from '@flowwhips/shared';
+} from '@baton/shared';
 
-function getFlowwhipsHome(): string {
-  return process.env.FLOWWHIPS_HOME ?? `${process.env.HOME ?? '~'}/.flowwhips`;
+function getBatonHome(): string {
+  return process.env.BATON_HOME ?? `${process.env.HOME ?? '~'}/.baton`;
 }
 
 async function getProvidersPath(): Promise<string> {
-  const home = getFlowwhipsHome();
+  const home = getBatonHome();
   const dir = join(home);
   await mkdir(dir, { recursive: true });
   return join(dir, 'providers.json');

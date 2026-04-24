@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "FlowWhips",
-    "slug": "flowwhips",
+    "name": "Baton",
+    "slug": "baton",
     "version": "0.0.1",
     "orientation": "default",
-    "scheme": "flowwhips",
+    "scheme": "baton",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.flowwhips.mobile"
+      "bundleIdentifier": "com.baton.mobile"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.flowwhips.mobile"
+      "package": "com.baton.mobile"
     },
     "web": {
       "bundler": "metro",

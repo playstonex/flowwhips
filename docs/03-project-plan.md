@@ -1,4 +1,4 @@
-# FlowWhips 项目计划
+# Baton 项目计划
 
 ## 一、项目里程碑
 
@@ -39,7 +39,7 @@ Phase 3: 移动端 + 多 Agent + 智能化       Week 11-16
 ### Monorepo 结构
 
 ```
-FlowWhips/
+Baton/
 ├── docs/                          # 项目文档
 ├── packages/
 │   ├── daemon/                    # 宿主守护进程

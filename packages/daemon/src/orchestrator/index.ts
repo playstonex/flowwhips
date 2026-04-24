@@ -1,4 +1,4 @@
-import type { AgentType, ParsedEvent } from '@flowwhips/shared';
+import type { AgentType, ParsedEvent } from '@baton/shared';
 import { AgentManager } from '../agent/manager.js';
 import { createAdapter } from '../agent/index.js';
 import type { BaseAgentAdapter } from '../agent/adapter.js';

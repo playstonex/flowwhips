@@ -1,4 +1,4 @@
-# FlowWhips
+# Baton
 
 Open-source remote AI Agent orchestration platform — control Claude Code, Codex, and OpenCode from your phone or browser.
 
@@ -41,14 +41,14 @@ Open-source remote AI Agent orchestration platform — control Claude Code, Code
 | `relay` | WebSocket relay for remote connections |
 | `gateway` | Auth service — JWT, pairing codes, SQLite |
 | `app` | React web UI — dashboard, terminal, files, pipelines |
-| `cli` | Terminal CLI — `flowwhips start/ls/attach/send/stop` |
+| `cli` | Terminal CLI — `baton start/ls/attach/send/stop` |
 
 ## Quick Start
 
 ```bash
 # Clone
-git clone https://github.com/playstonex/flowwhips.git
-cd flowwhips
+git clone https://github.com/playstonex/baton.git
+cd baton
 
 # Install
 pnpm install
@@ -57,10 +57,10 @@ pnpm install
 pnpm build
 
 # Start daemon (spawns agents on your machine)
-pnpm --filter @flowwhips/daemon dev
+pnpm --filter @baton/daemon dev
 
 # Start web app (in another terminal)
-pnpm --filter @flowwhips/app dev
+pnpm --filter @baton/app dev
 
 # Open http://localhost:5173
 ```
@@ -69,20 +69,20 @@ pnpm --filter @flowwhips/app dev
 
 ```bash
 # Start an agent
-flowwhips start /path/to/project
-flowwhips start /path/to/project --agent codex
+baton start /path/to/project
+baton start /path/to/project --agent codex
 
 # List running agents
-flowwhips ls
+baton ls
 
 # Attach to agent terminal
-flowwhips attach <session-id>
+baton attach <session-id>
 
 # Send input
-flowwhips send <session-id> "fix the bug"
+baton send <session-id> "fix the bug"
 
 # Stop an agent
-flowwhips stop <session-id>
+baton stop <session-id>
 ```
 
 ## Pipeline Orchestration

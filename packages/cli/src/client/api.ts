@@ -1,4 +1,4 @@
-export const DAEMON_URL = process.env.FLOWWHIPS_URL ?? 'http://localhost:3210';
+export const DAEMON_URL = process.env.BATON_URL ?? 'http://localhost:3210';
 export const WS_URL = DAEMON_URL.replace(/^http/, 'ws').replace(
   /:(\d+)$/,
   (_, p: string) => `:${Number(p) + 1}`,

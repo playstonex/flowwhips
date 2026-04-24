@@ -21,7 +21,7 @@ export const ProviderProfileSchema = z.object({
 
 export type ProviderProfile = z.infer<typeof ProviderProfileSchema>;
 
-// Root config file (~/.flowwhips/providers.json)
+// Root config file (~/.baton/providers.json)
 export const ProviderConfigSchema = z.object({
   providers: z.record(z.string(), ProviderProfileSchema),
 });

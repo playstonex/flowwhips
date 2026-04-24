@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { buildTool, toolResult, toolError, type BuiltTool } from '@flowwhips/shared';
+import { buildTool, toolResult, toolError, type BuiltTool } from '@baton/shared';
 import type { AgentManager } from '../../agent/manager.js';
 import type { BaseAgentAdapter } from '../../agent/adapter.js';
 import { createAdapter } from '../../agent/index.js';

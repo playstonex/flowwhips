@@ -1,5 +1,5 @@
 {
-  "name": "@flowwhips/daemon",
+  "name": "@baton/daemon",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.116",
-    "@flowwhips/shared": "workspace:*",
+    "@baton/shared": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "chokidar": "^4.0.3",
     "hono": "^4.7.0",

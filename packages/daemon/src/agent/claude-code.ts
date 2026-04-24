@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import type { AgentConfig, ParsedEvent, SpawnConfig, AgentType } from '@flowwhips/shared';
+import type { AgentConfig, ParsedEvent, SpawnConfig, AgentType } from '@baton/shared';
 import { BaseAgentAdapter } from './adapter.js';
 import { ClaudeCodeParser } from '../parser/index.js';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@flowwhips/relay",
+  "name": "@baton/relay",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@flowwhips/shared": "workspace:*",
+    "@baton/shared": "workspace:*",
     "pino": "^10.3.1",
     "tweetnacl": "^1.0.3"
   },

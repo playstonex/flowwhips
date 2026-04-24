@@ -1,7 +1,7 @@
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import type { ParsedEvent } from '@flowwhips/shared';
+import type { ParsedEvent } from '@baton/shared';
 import { useEventsStore } from '../../src/stores/events';
 import { wsService } from '../../src/services/websocket';
 import { CHANGE_COLORS } from '../../src/constants/colors';

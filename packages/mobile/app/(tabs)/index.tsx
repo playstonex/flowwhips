@@ -2,7 +2,7 @@ import { Alert } from 'react-native';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import type { AgentProcess, AgentType } from '@flowwhips/shared';
+import type { AgentProcess, AgentType } from '@baton/shared';
 import { useAgentStore } from '../../src/stores/agents';
 import { useConnectionStore } from '../../src/stores/connection';
 import { wsService } from '../../src/services/websocket';

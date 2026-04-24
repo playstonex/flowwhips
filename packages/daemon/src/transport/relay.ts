@@ -1,5 +1,5 @@
-import { generateKeyPair, keyToFingerprint } from '@flowwhips/shared/crypto';
-import type { DaemonMessage } from '@flowwhips/shared';
+import { generateKeyPair, keyToFingerprint } from '@baton/shared/crypto';
+import type { DaemonMessage } from '@baton/shared';
 
 interface RelayConnectionOptions {
   relayUrl: string;

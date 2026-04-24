@@ -8,7 +8,7 @@
 
 ### 核心问题：AGPL-3.0 vs Apache-2.0
 
-Paseo 使用 **AGPL-3.0** 许可证，FlowWhips 使用 **Apache-2.0**。
+Paseo 使用 **AGPL-3.0** 许可证，Baton 使用 **Apache-2.0**。
 
 AGPL-3.0 是强 copyleft 许可证：
 
@@ -32,12 +32,12 @@ AGPL-3.0 是强 copyleft 许可证：
 
 ### ✅ 路径 C — 复用相同底层库（最快，零风险）
 
-| 功能                   | Paseo 用的库                                          | FlowWhips 做法                                                            | 工作量 |
+| 功能                   | Paseo 用的库                                          | Baton 做法                                                            | 工作量 |
 | ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- | ------ |
 | **E2E 加密**           | `tweetnacl` (NaCl box)                                | `pnpm add tweetnacl`，照着 Paseo 的 ECDH + XSalsa20-Poly1305 流程自己实现 | 2-3 天 |
 | **QR 码生成**          | `qrcode`                                              | `pnpm add qrcode`，daemon 端生成 QR                                       | 1 天   |
 | **QR 码扫描 (mobile)** | `expo-camera`                                         | 已在 mobile 的依赖中可添加                                                | 1 天   |
-| **Agent SDK 集成**     | `@anthropic-ai/claude-agent-sdk` / `@opencode-ai/sdk` | 直接安装使用，替代 FlowWhips 的裸 node-pty spawn                          | 2-3 天 |
+| **Agent SDK 集成**     | `@anthropic-ai/claude-agent-sdk` / `@opencode-ai/sdk` | 直接安装使用，替代 Baton 的裸 node-pty spawn                          | 2-3 天 |
 | **语音 STT**           | `sherpa-onnx-node` + `@deepgram/sdk`                  | 安装同样库，实现 STT pipeline                                             | 3-5 天 |
 | **语音 TTS**           | `openai` (TTS API) + `sherpa-onnx` (本地)             | 安装同样库                                                                | 3-5 天 |
 | **MCP Server**         | `@modelcontextprotocol/sdk`                           | 安装 MCP SDK，实现 tools                                                  | 3-5 天 |
@@ -48,14 +48,14 @@ AGPL-3.0 是强 copyleft 许可证：
 
 ### ⚠️ 路径 B — 学习模式重写（中等，需理解后重实现）
 
-| 功能                     | Paseo 实现要点                                                                  | FlowWhips 适配方式                                   | 工作量 |
+| 功能                     | Paseo 实现要点                                                                  | Baton 适配方式                                   | 工作量 |
 | ------------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
 | **Agent 状态机**         | `initializing → idle → running → idle/error → closed` + file-backed persistence | 学习状态设计，在 `daemon/src/agent/manager.ts` 重写  | 3-4 天 |
-| **Provider 适配器**      | 统一接口 + 每个 provider 独立适配器 + output parser                             | FlowWhips 已有 `BaseAgentAdapter`，扩展加入 SDK 集成 | 3-4 天 |
-| **WebSocket 协议**       | Hello/Welcome 握手 + channel multiplex + session 管理                           | 重设计 FlowWhips 的 protocol 层                      | 3-4 天 |
+| **Provider 适配器**      | 统一接口 + 每个 provider 独立适配器 + output parser                             | Baton 已有 `BaseAgentAdapter`，扩展加入 SDK 集成 | 3-4 天 |
+| **WebSocket 协议**       | Hello/Welcome 握手 + channel multiplex + session 管理                           | 重设计 Baton 的 protocol 层                      | 3-4 天 |
 | **Worktree 管理**        | `git worktree add/list/remove` + per-worktree agent session                     | 新模块 `daemon/src/worktree/`                        | 2-3 天 |
 | **自定义 Provider 系统** | config.json schema + provider profiles + binary path                            | 在 shared 或 gateway 中添加 provider registry        | 3-4 天 |
-| **Agent 输出解析**       | highlight 包 + tool call parsers + structured events                            | 扩展 FlowWhips 的 `parser/index.ts`                  | 3-5 天 |
+| **Agent 输出解析**       | highlight 包 + tool call parsers + structured events                            | 扩展 Baton 的 `parser/index.ts`                  | 3-5 天 |
 | **定时任务/循环**        | schedule service + loop service                                                 | 新模块 `daemon/src/scheduler/`                       | 2-3 天 |
 | **权限系统**             | permit allow/deny rules for agent tool calls                                    | 在 daemon 添加 permission middleware                 | 2-3 天 |
 
@@ -63,8 +63,8 @@ AGPL-3.0 是强 copyleft 许可证：
 
 | 包                 | 原因                                                                      |
 | ------------------ | ------------------------------------------------------------------------- |
-| `@getpaseo/server` | AGPL 会传染整个项目；Paseo server 是 Express，FlowWhips 用 Hono           |
-| `@getpaseo/app`    | Expo RN app，FlowWhips 有自己的 web (React+Vite) + mobile (Expo) 分离架构 |
+| `@getpaseo/server` | AGPL 会传染整个项目；Paseo server 是 Express，Baton 用 Hono           |
+| `@getpaseo/app`    | Expo RN app，Baton 有自己的 web (React+Vite) + mobile (Expo) 分离架构 |
 | `@getpaseo/relay`  | 核心加密逻辑可以直接用 `tweetnacl` 重写                                   |
 | `@getpaseo/cli`    | 依赖 Paseo server 的 client 库                                            |
 
@@ -91,7 +91,7 @@ Paseo 的 E2E 加密方案值得学习：
   客户端验证指纹后信任
 ```
 
-FlowWhips 实现：
+Baton 实现：
 
 - 安装 `tweetnacl`
 - 实现同样的 ECDH + XSalsa20-Poly1305 流程
@@ -101,11 +101,11 @@ FlowWhips 实现：
 
 ## 四、Paseo MCP Server 设计参考
 
-Paseo 的 MCP Server 提供以下工具，FlowWhips 可参考实现：
+Paseo 的 MCP Server 提供以下工具，Baton 可参考实现：
 
 ```typescript
-// FlowWhips MCP Server 设计
-const server = new McpServer({ name: "flowwhips-daemon", version: "0.1.0" });
+// Baton MCP Server 设计
+const server = new McpServer({ name: "baton-daemon", version: "0.1.0" });
 
 // Agent 管理
 server.tool("agent_create", { provider, projectPath, prompt }, ...);

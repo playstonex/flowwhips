@@ -1,4 +1,4 @@
-# FlowWhips 与 Lunel 差距分析
+# Baton 与 Lunel 差距分析
 
 > 日期：2026-04-22
 > 版本：v1.0
@@ -7,7 +7,7 @@
 
 ## 1. 差距总览
 
-| 优先级 | 差距项 | Lunel 方案 | FlowWhips 当前 | 预估工时 |
+| 优先级 | 差距项 | Lunel 方案 | Baton 当前 | 预估工时 |
 |--------|--------|-----------|---------------|----------|
 | 🔴 高 | 终端渲染 | Rust PTY + server-side + 24fps | node-pty + xterm.js | 2-3 周 |
 | 🔴 高 | E2E 加密 | libsodium + 4步握手 + MITM防护 | AES-256-GCM (Relay层) | 1-2 周 |
@@ -32,7 +32,7 @@
 - 只传输变化的帧
 - 跨平台预编译二进制
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - node-pty + xterm.js
 - Client-side 渲染，占用浏览器资源
 - 全量传输 terminal 数据
@@ -59,7 +59,7 @@
 - MITM auth tag 防护
 - 二进制帧格式: magic bytes [0x4C, 0x32] + frame type + encrypted payload
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - AES-256-GCM + JWT 认证
 - 加密在 Relay 层
 - 中间人可看到明文
@@ -87,7 +87,7 @@
 - 一致性哈希环
 - Manager 宕机时 Proxy 进入 read-only
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - Gateway: 认证 + JWT
 - Relay: WebSocket 中转
 - 缺少统一管理面
@@ -114,7 +114,7 @@
 - 支持多实例
 - GPI 跨插件通信
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - 固定组件: Dashboard, Terminal, Files, Pipelines
 - 修改主布局添加新功能
 
@@ -136,7 +136,7 @@
 - 优雅降级
 - 事件驱动: subscribe(emitter)
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - ClaudeAgentAdapter, CodexAdapter, OpenCodeAdapter
 - 各 adapter 独立实现
 - 无统一接口
@@ -161,7 +161,7 @@
 - Session preloading
 - Resume token 机制
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - JWT token 过期时间
 - 断连需重新配对
 
@@ -180,7 +180,7 @@
 - 进程管理
 - 端口扫描 + 代理隧道
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - 无监控功能
 
 **借鉴方向**:
@@ -196,7 +196,7 @@
 - 写入抑制 (1.5s)
 - 引用计数管理
 
-**FlowWhips 当前**:
+**Baton 当前**:
 - chokidar 基础监听
 
 **借鉴方向**:
@@ -207,14 +207,14 @@
 
 ## 5. 技术栈对比
 
-| 技术 | Lunel | FlowWhips | 评估 |
+| 技术 | Lunel | Baton | 评估 |
 |------|-------|-----------|------|
 | Runtime | Node.js + Bun | Node.js 22 | Bun 在 I/O 密集有优势 |
 | PTY | Rust (wezterm fork) | node-pty | Rust 性能更好 |
 | Mobile | Expo/React Native | React Web | 原生 App 体验更好 |
 | Database | SQLite | SQLite (Drizzle) | 类似 |
 | 加密 | libsodium | AES-256-GCM | libsodium 更适合 E2E |
-| Build | Makefile | Turborepo | FlowWhips 更成熟 |
+| Build | Makefile | Turborepo | Baton 更成熟 |
 | Terminal | Custom cell grid | xterm.js | xterm 功能更丰富 |
 
 ---
@@ -247,7 +247,7 @@
 
 ---
 
-## 7. FlowWhips 领先项
+## 7. Baton 领先项
 
 | 优势 | 说明 |
 |------|------|

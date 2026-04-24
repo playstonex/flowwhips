@@ -1,5 +1,5 @@
 {
-  "name": "@flowwhips/gateway",
+  "name": "@baton/gateway",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@flowwhips/shared": "workspace:*",
+    "@baton/shared": "workspace:*",
     "drizzle-orm": "^0.42.0",
     "hono": "^4.7.0",
     "jose": "^6.0.0",
