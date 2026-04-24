@@ -1,10 +1,18 @@
 import { StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { Button, Input, Spinner } from 'heroui-native';
 import { useConnectionStore } from '../../src/stores/connection';
 import { wsService } from '../../src/services/websocket';
 import { saveCredentials, clearCredentials } from '../../src/services/secure-storage';
+
+const BG = '#09090b';
+const CARD = '#111113';
+const ELEVATED = '#1a1a1e';
+const BORDER = 'rgba(255,255,255,0.06)';
+const TEXT_PRIMARY = '#f4f4f5';
+const TEXT_SECONDARY = '#a1a1aa';
+const TEXT_MUTED = '#71717a';
 
 export default function SettingsScreen() {
   const mode = useConnectionStore((s) => s.mode);
@@ -48,95 +56,327 @@ export default function SettingsScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.content}>
-        <View style={styles.modeRow}>
-          {(['remote', 'local'] as const).map((m) => (
-            <Button
-              key={m}
-              variant={mode === m ? 'primary' : 'secondary'}
-              size="sm"
-              onPress={() => setMode(m)}
-              style={{ flex: 1 }}
-            >
-              {m === 'remote' ? 'Remote' : 'Local'}
-            </Button>
-          ))}
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.pageTitle}>Settings</Text>
+        <Text style={styles.pageSubtitle}>Configure your connection to the daemon</Text>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Connection Mode</Text>
+          <View style={styles.modeRow}>
+            {(['remote', 'local'] as const).map((m) => {
+              const active = mode === m;
+              return (
+                <Pressable
+                  key={m}
+                  onPress={() => setMode(m)}
+                  style={[styles.modeCard, active && styles.modeCardActive]}
+                >
+                  <View style={styles.modeIconContainer}>
+                    <Text style={styles.modeIcon}>{m === 'remote' ? '\u{1F310}' : '\u{1F5A7}'}</Text>
+                  </View>
+                  <Text style={[styles.modeTitle, active && styles.modeTitleActive]}>
+                    {m === 'remote' ? 'Remote' : 'Local'}
+                  </Text>
+                  <Text style={styles.modeDesc}>
+                    {m === 'remote' ? 'Via relay server' : 'Same network'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
+
+        <View style={styles.divider} />
 
         {mode === 'remote' ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Remote Connection</Text>
-            <Text style={styles.sectionDesc}>Enter relay URL and 6-digit pairing code from the host</Text>
-            <Input
-              placeholder="Relay URL (e.g. ws://192.168.1.100:3230)"
-              value={inputRelayUrl}
-              onChangeText={setInputRelayUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-              variant="secondary"
-            />
-            <Input
-              placeholder="6-digit pairing code"
-              value={inputPairingCode}
-              onChangeText={setInputPairingCode}
-              keyboardType="number-pad"
-              maxLength={6}
-              variant="secondary"
-            />
-            <Button
-              variant="primary"
+            <Text style={styles.sectionLabel}>Remote Connection</Text>
+            <Text style={styles.sectionDesc}>Enter relay URL and 6-digit pairing code from the host machine</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Relay URL</Text>
+              <Input
+                placeholder="ws://192.168.1.100:3230"
+                value={inputRelayUrl}
+                onChangeText={setInputRelayUrl}
+                autoCapitalize="none"
+                autoCorrect={false}
+                variant="secondary"
+              />
+              <Text style={styles.fieldHint}>WebSocket address of your relay server</Text>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Pairing Code</Text>
+              <Input
+                placeholder="000000"
+                value={inputPairingCode}
+                onChangeText={setInputPairingCode}
+                keyboardType="number-pad"
+                maxLength={6}
+                variant="secondary"
+              />
+              <Text style={styles.fieldHint}>6-digit code shown on the host terminal</Text>
+            </View>
+            <Pressable
               onPress={pairAndConnect}
-              isDisabled={loading || !inputRelayUrl.trim() || inputPairingCode.length < 6}
+              style={[styles.primaryButton, (loading || !inputRelayUrl.trim() || inputPairingCode.length < 6) && styles.primaryButtonDisabled]}
+              disabled={loading || !inputRelayUrl.trim() || inputPairingCode.length < 6}
             >
-              {loading ? <Spinner size="sm" color="#fff" /> : 'Pair & Connect'}
-            </Button>
-            {connected && hostId ? (<View style={styles.successBox}><Text style={styles.successText}>Connected to host: {hostId.slice(0, 8)}...</Text></View>) : null}
+              {loading ? <Spinner size="sm" color="#fff" /> : (
+                <Text style={styles.primaryButtonText}>Pair & Connect</Text>
+              )}
+            </Pressable>
+            {connected && hostId ? (
+              <View style={styles.successBox}>
+                <Text style={styles.successIcon}>{'\u{2705}'}</Text>
+                <View>
+                  <Text style={styles.successTitle}>Connected</Text>
+                  <Text style={styles.successText}>Host: {hostId.slice(0, 8)}...</Text>
+                </View>
+              </View>
+            ) : null}
           </View>
         ) : (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Local Connection</Text>
-            <Input
-              placeholder="Daemon HTTP URL"
-              value={inputLocalHttp}
-              onChangeText={setInputLocalHttp}
-              autoCapitalize="none"
-              autoCorrect={false}
-              variant="secondary"
-            />
-            <Input
-              placeholder="Daemon WebSocket URL (auto-derived)"
-              value={inputLocalWs}
-              onChangeText={setInputLocalWs}
-              autoCapitalize="none"
-              autoCorrect={false}
-              variant="secondary"
-            />
-            <Button
-              variant="primary"
+            <Text style={styles.sectionLabel}>Local Connection</Text>
+            <Text style={styles.sectionDesc}>Connect directly to the daemon on the same network</Text>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>HTTP URL</Text>
+              <Input
+                placeholder="http://192.168.1.100:3210"
+                value={inputLocalHttp}
+                onChangeText={setInputLocalHttp}
+                autoCapitalize="none"
+                autoCorrect={false}
+                variant="secondary"
+              />
+              <Text style={styles.fieldHint}>Daemon HTTP endpoint</Text>
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>WebSocket URL</Text>
+              <Input
+                placeholder="Auto-derived from HTTP URL"
+                value={inputLocalWs}
+                onChangeText={setInputLocalWs}
+                autoCapitalize="none"
+                autoCorrect={false}
+                variant="secondary"
+              />
+              <Text style={styles.fieldHint}>Leave empty to auto-derive</Text>
+            </View>
+            <Pressable
               onPress={connectLocal}
-              isDisabled={loading || !inputLocalHttp.trim()}
+              style={[styles.primaryButton, (loading || !inputLocalHttp.trim()) && styles.primaryButtonDisabled]}
+              disabled={loading || !inputLocalHttp.trim()}
             >
-              {loading ? <Spinner size="sm" color="#fff" /> : 'Connect'}
-            </Button>
+              {loading ? <Spinner size="sm" color="#fff" /> : (
+                <Text style={styles.primaryButtonText}>Connect</Text>
+              )}
+            </Pressable>
           </View>
         )}
 
-        {error ? (<View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>) : null}
-        {connected && (<Button variant="danger-soft" onPress={disconnect}>Disconnect</Button>)}
-      </View>
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorIcon}>{'\u{26A0}'}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.errorTitle}>Connection Failed</Text>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {connected && (
+          <Pressable onPress={disconnect} style={styles.disconnectButton}>
+            <Text style={styles.disconnectButtonText}>Disconnect</Text>
+          </Pressable>
+        )}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  content: { padding: 16, gap: 16 },
-  modeRow: { flexDirection: 'row', gap: 8 },
-  section: { gap: 8 },
-  sectionTitle: { fontWeight: '600', fontSize: 16, color: '#fff', marginBottom: 4 },
-  sectionDesc: { fontSize: 12, color: '#6b7280', marginBottom: 8 },
-  successBox: { padding: 12, backgroundColor: 'rgba(34,197,94,0.15)', borderRadius: 12, borderLeftWidth: 3, borderLeftColor: '#22c55e' },
-  successText: { color: '#4ade80', fontSize: 13 },
-  errorBox: { padding: 12, backgroundColor: 'rgba(239,68,68,0.15)', borderRadius: 12, borderLeftWidth: 3, borderLeftColor: '#ef4444', marginTop: 8 },
-  errorText: { color: '#f87171', fontSize: 13 },
+  container: { flex: 1, backgroundColor: BG },
+  content: { padding: 20, gap: 4 },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: TEXT_PRIMARY,
+    letterSpacing: -0.5,
+  },
+  pageSubtitle: {
+    fontSize: 13,
+    color: TEXT_MUTED,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  section: {
+    gap: 10,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: TEXT_MUTED,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  sectionDesc: {
+    fontSize: 13,
+    color: TEXT_MUTED,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  modeRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modeCard: {
+    flex: 1,
+    backgroundColor: CARD,
+    borderRadius: 14,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: BORDER,
+    padding: 16,
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 100,
+  },
+  modeCardActive: {
+    backgroundColor: '#3b82f610',
+    borderColor: '#3b82f6',
+  },
+  modeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    backgroundColor: ELEVATED,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  modeIcon: {
+    fontSize: 20,
+  },
+  modeTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: TEXT_SECONDARY,
+  },
+  modeTitleActive: {
+    color: '#3b82f6',
+  },
+  modeDesc: {
+    fontSize: 11,
+    color: TEXT_MUTED,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: BORDER,
+    marginVertical: 16,
+  },
+  fieldGroup: {
+    gap: 4,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: TEXT_SECONDARY,
+    letterSpacing: 0.2,
+  },
+  fieldHint: {
+    fontSize: 11,
+    color: TEXT_MUTED,
+    marginLeft: 2,
+  },
+  primaryButton: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    marginTop: 4,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.4,
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    backgroundColor: 'rgba(34,197,94,0.08)',
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: 'rgba(34,197,94,0.2)',
+  },
+  successIcon: {
+    fontSize: 16,
+  },
+  successTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4ade80',
+  },
+  successText: {
+    fontSize: 12,
+    color: '#4ade80',
+    opacity: 0.8,
+    fontFamily: 'monospace',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    backgroundColor: 'rgba(239,68,68,0.08)',
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.2)',
+    marginTop: 10,
+  },
+  errorIcon: {
+    fontSize: 16,
+  },
+  errorTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f87171',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#f87171',
+    opacity: 0.8,
+    lineHeight: 16,
+  },
+  disconnectButton: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.2)',
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    marginTop: 10,
+  },
+  disconnectButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#f87171',
+  },
 });
