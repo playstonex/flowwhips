@@ -8,16 +8,23 @@ import { HeroUINativeProvider } from 'heroui-native';
 import { useConnectionStore } from '../src/stores/connection';
 import { wsService } from '../src/services/websocket';
 import { loadCredentials } from '../src/services/secure-storage';
-import { Colors, Typography } from '../src/constants/theme';
+import { Typography } from '../src/constants/theme';
+import { useThemeStore } from '../src/stores/theme';
+import { useThemeColors } from '../src/hooks/useThemeColors';
 
 export default function RootLayout() {
   const setCredentials = useConnectionStore((s) => s.setCredentials);
   const setConnected = useConnectionStore((s) => s.setConnected);
+  const loadTheme = useThemeStore((s) => s.loadTheme);
   const initialized = useRef(false);
+
+  const c = useThemeColors();
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+
+    loadTheme();
 
     (async () => {
       const saved = await loadCredentials();
@@ -38,22 +45,22 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
-        <StatusBar style="light" backgroundColor={Colors.dark.bg} />
+        <StatusBar style={c.isDark ? 'light' : 'dark'} backgroundColor={c.bg} />
         <Stack
           screenOptions={{
             headerBackButtonDisplayMode: 'minimal',
-            headerTintColor: Colors.text.primary,
+            headerTintColor: c.textPrimary,
             headerStyle: {
-              backgroundColor: Colors.dark.bg,
+              backgroundColor: c.bg,
             },
             headerTitleStyle: {
               ...Typography.lg,
               fontWeight: '600',
-              color: Colors.text.primary,
+              color: c.textPrimary,
             },
             headerShadowVisible: false,
             contentStyle: {
-              backgroundColor: Colors.dark.bg,
+              backgroundColor: c.bg,
             },
             animation: 'slide_from_right',
           }}
@@ -64,9 +71,9 @@ export default function RootLayout() {
             options={{
               title: 'Terminal',
               headerStyle: {
-                backgroundColor: Colors.dark.bg,
+                backgroundColor: c.bg,
               },
-              headerTintColor: Colors.text.primary,
+              headerTintColor: c.textPrimary,
             }}
           />
           <Stack.Screen
@@ -74,9 +81,9 @@ export default function RootLayout() {
             options={{
               title: 'Agent Detail',
               headerStyle: {
-                backgroundColor: Colors.dark.bg,
+                backgroundColor: c.bg,
               },
-              headerTintColor: Colors.text.primary,
+              headerTintColor: c.textPrimary,
             }}
           />
         </Stack>

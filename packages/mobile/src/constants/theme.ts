@@ -64,12 +64,28 @@ export const Colors = {
     inputBg: '#141420',
     inputBorder: '#252536',
   },
+  light: {
+    bg: '#ffffff',
+    card: '#f9fafb',
+    cardBorder: '#e5e7eb',
+    elevated: '#f3f4f6',
+    subtle: '#e5e7eb',
+    inputBg: '#f9fafb',
+    inputBorder: '#d1d5db',
+  },
   glass: {
     background: 'rgba(14, 14, 20, 0.75)',
     backgroundLight: 'rgba(14, 14, 20, 0.55)',
     border: 'rgba(255, 255, 255, 0.06)',
     borderLight: 'rgba(255, 255, 255, 0.03)',
     highlight: 'rgba(255, 255, 255, 0.08)',
+  },
+  lightGlass: {
+    background: 'rgba(255, 255, 255, 0.85)',
+    backgroundLight: 'rgba(255, 255, 255, 0.65)',
+    border: 'rgba(0, 0, 0, 0.06)',
+    borderLight: 'rgba(0, 0, 0, 0.03)',
+    highlight: 'rgba(0, 0, 0, 0.04)',
   },
   gradient: {
     primaryStart: '#3b82f6',
@@ -85,6 +101,13 @@ export const Colors = {
     tertiary: '#5c5c72',
     inverse: '#050508',
     accent: '#60a5fa',
+  },
+  lightText: {
+    primary: '#111827',
+    secondary: '#4b5563',
+    tertiary: '#9ca3af',
+    inverse: '#f9fafb',
+    accent: '#2563eb',
   },
 } as const;
 

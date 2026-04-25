@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@heroui/styles";
+@import 'tailwindcss';
+@import '@heroui/styles';
 
 /* ============================================
    Baton Design System — CSS Custom Properties
@@ -7,17 +7,17 @@
 
 @theme {
   /* Primitive colors */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  --color-primary-50: #eef5ff;
+  --color-primary-100: #d9e9ff;
+  --color-primary-200: #bdd7ff;
+  --color-primary-300: #8ebcff;
+  --color-primary-400: #5e9dff;
+  --color-primary-500: #347cff;
+  --color-primary-600: #215ce5;
+  --color-primary-700: #1e49bf;
+  --color-primary-800: #1d3f98;
+  --color-primary-900: #1b366f;
+  --color-primary-950: #15244b;
 
   --color-success-50: #f0fdf4;
   --color-success-100: #dcfce7;
@@ -40,28 +40,31 @@
   --color-danger-700: #b91c1c;
 
   --color-surface-0: #ffffff;
-  --color-surface-50: #f9fafb;
-  --color-surface-100: #f3f4f6;
-  --color-surface-200: #e5e7eb;
-  --color-surface-300: #d1d5db;
-  --color-surface-400: #9ca3af;
-  --color-surface-500: #6b7280;
-  --color-surface-600: #4b5563;
-  --color-surface-700: #374151;
-  --color-surface-800: #1f2937;
-  --color-surface-900: #111827;
-  --color-surface-950: #030712;
+  --color-surface-50: #f6f8fc;
+  --color-surface-100: #edf1f7;
+  --color-surface-200: #dde4ef;
+  --color-surface-300: #c6d0df;
+  --color-surface-400: #92a0b4;
+  --color-surface-500: #657389;
+  --color-surface-600: #475468;
+  --color-surface-700: #313c4d;
+  --color-surface-800: #1d2432;
+  --color-surface-900: #121823;
+  --color-surface-950: #090d14;
 
-  --color-purple-50: #faf5ff;
-  --color-purple-100: #f3e8ff;
-  --color-purple-400: #c084fc;
-  --color-purple-500: #a855f7;
-  --color-purple-600: #9333ea;
-  --color-purple-700: #7e22ce;
+  --color-purple-50: #f8f4ff;
+  --color-purple-100: #efe6ff;
+  --color-purple-400: #b791ff;
+  --color-purple-500: #9268ff;
+  --color-purple-600: #7748f2;
+  --color-purple-700: #6233d4;
 
   /* Typography */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  --font-sans:
+    'Satoshi', 'SF Pro Display', 'Segoe UI Variable Display', 'Inter', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 
   /* Spacing */
   --spacing-sidebar: 260px;
@@ -92,11 +95,20 @@
   body {
     @apply bg-surface-50 text-surface-900 antialiased;
     font-family: var(--font-sans);
+    background-image:
+      radial-gradient(circle at top left, rgba(52, 124, 255, 0.16), transparent 30%),
+      radial-gradient(circle at top right, rgba(146, 104, 255, 0.14), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 248, 252, 0.96));
+    background-attachment: fixed;
   }
 
   .dark body,
   .dark {
     @apply bg-surface-950 text-surface-100;
+    background-image:
+      radial-gradient(circle at top left, rgba(52, 124, 255, 0.2), transparent 28%),
+      radial-gradient(circle at top right, rgba(146, 104, 255, 0.18), transparent 26%),
+      linear-gradient(180deg, rgba(9, 13, 20, 0.98), rgba(9, 13, 20, 1));
   }
 
   /* Scrollbar styling */
@@ -123,7 +135,8 @@
    ============================================ */
 
 @keyframes pulse-dot {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -163,4 +176,32 @@
 
 @utility animate-slide-in {
   animation: slide-in-right 0.2s ease-out;
+}
+
+@layer components {
+  .ambient-grid {
+    position: relative;
+  }
+
+  .ambient-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent 90%);
+  }
+
+  .dark .ambient-grid::before {
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  }
+
+  .glass-panel {
+    @apply border border-white/50 bg-white/75 shadow-xl shadow-surface-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-surface-900/70 dark:shadow-black/20;
+  }
 }

@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, Platform, StyleSheet } from 'react-native';
-import { Colors, Typography, Radius, Spacing } from '../../src/constants/theme';
+import { Typography, Radius, Spacing } from '../../src/constants/theme';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 const TAB_ITEMS = [
   { name: 'index', label: 'Agents', icon: '\u{1F9E0}', title: 'Dashboard' },
@@ -11,77 +12,99 @@ const TAB_ITEMS = [
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', width: 48, minHeight: 36 }}>
-      <Text
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 52,
+        minHeight: 42,
+      }}
+    >
+      <View
         style={{
-          fontSize: focused ? 24 : 22,
-          opacity: focused ? 1 : 0.45,
-          lineHeight: 28,
-          textAlign: 'center',
+          minWidth: 42,
+          minHeight: 34,
+          borderRadius: Radius.full,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: focused ? 'rgba(59,130,246,0.14)' : 'transparent',
+          borderWidth: focused ? 1 : 0,
+          borderColor: focused ? 'rgba(59,130,246,0.26)' : 'transparent',
         }}
       >
-        {icon}
-      </Text>
-      {focused && (
+        <Text
+          style={{
+            fontSize: focused ? 22 : 20,
+            opacity: focused ? 1 : 0.48,
+            lineHeight: 24,
+            textAlign: 'center',
+          }}
+        >
+          {icon}
+        </Text>
+      </View>
+      {focused ? (
         <View
           style={{
             position: 'absolute',
-            bottom: -2,
-            width: 16,
-            height: 2.5,
+            bottom: 0,
+            width: 18,
+            height: 3,
             borderRadius: Radius.full,
-            backgroundColor: Colors.primary[400],
+            backgroundColor: '#3b82f6',
           }}
         />
-      )}
+      ) : null}
     </View>
   );
 }
 
 export default function TabLayout() {
+  const c = useThemeColors();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.text.primary,
-        tabBarInactiveTintColor: Colors.text.tertiary,
+        tabBarActiveTintColor: c.textPrimary,
+        tabBarInactiveTintColor: c.textTertiary,
         tabBarStyle: {
-          backgroundColor: Colors.glass.background,
-          borderTopColor: Colors.glass.border,
+          backgroundColor: c.glassBg,
+          borderTopColor: c.glassBorder,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === 'ios' ? 88 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 32 : 8,
+          height: Platform.OS === 'ios' ? 94 : 72,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: Spacing.sm,
-          paddingHorizontal: Spacing.xs,
+          paddingHorizontal: Spacing.sm,
           position: 'absolute',
           elevation: 0,
         },
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '600',
+          fontWeight: '700',
           letterSpacing: 0.02,
-          marginTop: Platform.OS === 'ios' ? -2 : 2,
+          marginTop: Platform.OS === 'ios' ? 0 : 2,
         },
         headerStyle: {
-          backgroundColor: Colors.dark.bg,
+          backgroundColor: c.bg,
           shadowColor: 'transparent',
           elevation: 0,
-          borderBottomColor: Colors.glass.border,
+          borderBottomColor: c.glassBorder,
           borderBottomWidth: StyleSheet.hairlineWidth,
           height: 52,
         },
         headerTitleStyle: {
           ...Typography.lg,
           fontWeight: '700',
-          color: Colors.text.primary,
+          color: c.textPrimary,
           letterSpacing: -0.02,
         },
         headerShadowVisible: false,
-        headerTintColor: Colors.text.primary,
+        headerTintColor: c.textPrimary,
         tabBarIconStyle: {
           marginTop: 0,
           marginBottom: 0,
-          height: 36,
-          width: 48,
+          height: 42,
+          width: 52,
         },
         tabBarAllowFontScaling: false,
       }}
@@ -100,4 +123,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
