@@ -24,12 +24,24 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
         style={{
           minWidth: 42,
           minHeight: 34,
-          borderRadius: Radius.full,
+          borderRadius: Platform.OS === 'ios' ? Radius['2xl'] : Radius.lg,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: focused ? 'rgba(59,130,246,0.14)' : 'transparent',
-          borderWidth: focused ? 1 : 0,
-          borderColor: focused ? 'rgba(59,130,246,0.26)' : 'transparent',
+          backgroundColor: focused
+            ? Platform.OS === 'ios'
+              ? 'rgba(59,130,246,0.12)'
+              : 'rgba(59,130,246,0.16)'
+            : 'transparent',
+          borderWidth: focused ? 0.5 : 0,
+          borderColor: focused ? 'rgba(59,130,246,0.18)' : 'transparent',
+          ...(Platform.OS === 'ios' && focused
+            ? {
+                shadowColor: '#3b82f6',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 6,
+              }
+            : {}),
         }}
       >
         <Text
@@ -68,19 +80,33 @@ export default function TabLayout() {
         tabBarActiveTintColor: c.textPrimary,
         tabBarInactiveTintColor: c.textTertiary,
         tabBarStyle: {
-          backgroundColor: c.glassBg,
-          borderTopColor: c.glassBorder,
-          borderTopWidth: StyleSheet.hairlineWidth,
+          backgroundColor: c.isDark
+            ? Platform.OS === 'ios'
+              ? 'rgba(14,14,20,0.72)'
+              : 'rgba(14,14,20,0.92)'
+            : Platform.OS === 'ios'
+              ? 'rgba(255,255,255,0.78)'
+              : 'rgba(255,255,255,0.95)',
+          borderTopColor: c.cardBorder,
+          borderTopWidth: Platform.OS === 'android' ? 0 : StyleSheet.hairlineWidth,
           height: Platform.OS === 'ios' ? 94 : 72,
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: Spacing.sm,
           paddingHorizontal: Spacing.sm,
           position: 'absolute',
-          elevation: 0,
+          elevation: Platform.OS === 'android' ? 3 : 0,
+          ...(Platform.OS === 'ios'
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -2 },
+                shadowOpacity: c.isDark ? 0.2 : 0.06,
+                shadowRadius: 8,
+              }
+            : {}),
         },
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: '700',
+          fontWeight: Platform.OS === 'android' ? '600' : '700',
           letterSpacing: 0.02,
           marginTop: Platform.OS === 'ios' ? 0 : 2,
         },
@@ -88,7 +114,7 @@ export default function TabLayout() {
           backgroundColor: c.bg,
           shadowColor: 'transparent',
           elevation: 0,
-          borderBottomColor: c.glassBorder,
+          borderBottomColor: c.cardBorder,
           borderBottomWidth: StyleSheet.hairlineWidth,
           height: 52,
         },

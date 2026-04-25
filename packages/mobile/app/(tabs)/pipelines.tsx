@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button, Card, Chip, Spinner } from 'heroui-native';
 import type { AgentType } from '@baton/shared';
 import { apiFetch } from '../../src/services/api';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 function generateUUID(): string {
   const hex = '0123456789abcdef';
@@ -59,19 +60,12 @@ const AGENT_LABELS: Record<string, string> = {
   'opencode': 'OpenCode',
 };
 
-const BG = '#09090b';
-const CARD = '#111113';
-const ELEVATED = '#1a1a1e';
-const BORDER = 'rgba(255,255,255,0.06)';
-const TEXT_PRIMARY = '#f4f4f5';
-const TEXT_SECONDARY = '#a1a1aa';
-const TEXT_MUTED = '#71717a';
-
 export default function PipelinesScreen() {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [name, setName] = useState('');
   const [steps, setSteps] = useState<PipelineStep[]>([{ id: generateUUID(), agentType: 'claude-code', projectPath: '' }]);
   const [creating, setCreating] = useState(false);
+  const c = useThemeColors();
 
   const fetchPipelines = useCallback(async () => {
     try {
@@ -125,23 +119,23 @@ export default function PipelinesScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg }]}>
       <FlatList
         data={pipelines}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.form}>
-            <Text style={styles.formTitle}>Pipelines</Text>
-            <Text style={styles.formSubtitle}>Chain multiple agents in sequence</Text>
+            <Text style={[styles.formTitle, { color: c.textPrimary }]}>Pipelines</Text>
+            <Text style={[styles.formSubtitle, { color: c.textTertiary }]}>Chain multiple agents in sequence</Text>
 
-            <View style={styles.formCard}>
+            <View style={[styles.formCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
               <TextInput
                 placeholder="Pipeline name"
                 value={name}
                 onChangeText={setName}
-                placeholderTextColor={TEXT_MUTED}
-                style={styles.nameInput}
+                placeholderTextColor={c.textTertiary}
+                style={[styles.nameInput, { backgroundColor: c.elevated, borderColor: c.cardBorder, color: c.textPrimary }]}
               />
 
               <View style={styles.stepsContainer}>
@@ -159,9 +153,9 @@ export default function PipelinesScreen() {
                               <Pressable
                                 key={t}
                                 onPress={() => updateStep(i, { agentType: t })}
-                                style={[styles.stepTypePill, active && styles.stepTypePillActive]}
+                                style={[styles.stepTypePill, { backgroundColor: c.elevated }, active && styles.stepTypePillActive]}
                               >
-                                <Text style={[styles.stepTypeLabel, active && styles.stepTypeLabelActive]}>
+                                <Text style={[styles.stepTypeLabel, { color: c.textTertiary }, active && styles.stepTypeLabelActive]}>
                                   {AGENT_LABELS[t] ?? t.split('-')[0]}
                                 </Text>
                               </Pressable>
@@ -172,8 +166,8 @@ export default function PipelinesScreen() {
                           placeholder="/path/to/project"
                           value={step.projectPath}
                           onChangeText={(v) => updateStep(i, { projectPath: v })}
-                          placeholderTextColor={TEXT_MUTED}
-                          style={styles.pathInput}
+                          placeholderTextColor={c.textTertiary}
+                          style={[styles.pathInput, { backgroundColor: c.elevated, borderColor: c.cardBorder, color: c.textSecondary }]}
                         />
                       </View>
                       {steps.length > 1 && (
@@ -184,8 +178,8 @@ export default function PipelinesScreen() {
                     </View>
                     {i < steps.length - 1 && (
                       <View style={styles.stepConnector}>
-                        <View style={styles.stepConnectorLine} />
-                        <Text style={styles.stepConnectorArrow}>{'\u{25BC}'}</Text>
+                        <View style={[styles.stepConnectorLine, { backgroundColor: c.cardBorder }]} />
+                        <Text style={[styles.stepConnectorArrow, { color: c.textTertiary }]}>{'\u{25BC}'}</Text>
                       </View>
                     )}
                   </View>
@@ -193,8 +187,8 @@ export default function PipelinesScreen() {
               </View>
 
               <View style={styles.formActions}>
-                <Pressable onPress={addStep} style={styles.addStepButton}>
-                  <Text style={styles.addStepText}>+ Add Step</Text>
+                <Pressable onPress={addStep} style={[styles.addStepButton, { backgroundColor: c.elevated, borderColor: c.cardBorder }]}>
+                  <Text style={[styles.addStepText, { color: c.textSecondary }]}>+ Add Step</Text>
                 </Pressable>
                 <Pressable
                   onPress={createAndRun}
@@ -210,19 +204,19 @@ export default function PipelinesScreen() {
           </View>
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
             <Text style={styles.emptyIcon}>{'\u{1F517}'}</Text>
-            <Text style={styles.emptyText}>No pipelines yet</Text>
-            <Text style={styles.emptySubtext}>Create one above to get started</Text>
+            <Text style={[styles.emptyText, { color: c.textSecondary }]}>No pipelines yet</Text>
+            <Text style={[styles.emptySubtext, { color: c.textTertiary }]}>Create one above to get started</Text>
           </View>
         }
         renderItem={({ item: p }) => {
-          const statusColor = STEP_STATUS_COLOR[p.status] ?? TEXT_MUTED;
+          const statusColor = STEP_STATUS_COLOR[p.status] ?? c.textTertiary;
           return (
-            <View style={styles.pipelineCard}>
+            <View style={[styles.pipelineCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
               <View style={styles.pipelineHeader}>
                 <View style={styles.pipelineTitleRow}>
-                  <Text style={styles.pipelineName}>{p.name}</Text>
+                  <Text style={[styles.pipelineName, { color: c.textPrimary }]}>{p.name}</Text>
                   <View style={[styles.pipelineStatusChip, { backgroundColor: statusColor + '18' }]}>
                     <View style={[styles.pipelineStatusDot, { backgroundColor: statusColor }]} />
                     <Text style={[styles.pipelineStatusText, { color: statusColor }]}>{p.status}</Text>
@@ -237,20 +231,20 @@ export default function PipelinesScreen() {
               <View style={styles.stepFlow}>
                 {p.steps.map((step, i) => {
                   const result = p.results[i];
-                  const color = STEP_STATUS_COLOR[result?.status ?? 'pending'] ?? TEXT_MUTED;
+                  const color = STEP_STATUS_COLOR[result?.status ?? 'pending'] ?? c.textTertiary;
                   return (
                     <View key={step.id} style={styles.stepFlowItem}>
                       {i > 0 && (
                         <View style={styles.flowConnector}>
-                          <View style={styles.flowLine} />
-                          <Text style={styles.flowArrow}>{'\u{2192}'}</Text>
+                          <View style={[styles.flowLine, { backgroundColor: c.cardBorder }]} />
+                          <Text style={[styles.flowArrow, { color: c.textTertiary }]}>{'\u{2192}'}</Text>
                         </View>
                       )}
                       <View style={[styles.flowStepCircle, { borderColor: color }]}>
                         <Text style={[styles.flowStepText, { color }]}>{i + 1}</Text>
                       </View>
                       <View style={styles.flowStepInfo}>
-                        <Text style={styles.flowStepName}>{AGENT_LABELS[step.agentType] ?? step.agentType.split('-')[0]}</Text>
+                        <Text style={[styles.flowStepName, { color: c.textSecondary }]}>{AGENT_LABELS[step.agentType] ?? step.agentType.split('-')[0]}</Text>
                       </View>
                     </View>
                   );
@@ -265,40 +259,33 @@ export default function PipelinesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+  container: { flex: 1 },
   listContent: { padding: 16 },
   form: { marginBottom: 24 },
   formTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: TEXT_PRIMARY,
     letterSpacing: -0.5,
   },
   formSubtitle: {
     fontSize: 13,
-    color: TEXT_MUTED,
     marginTop: 4,
     marginBottom: 16,
   },
   formCard: {
-    backgroundColor: CARD,
     borderRadius: 16,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     padding: 16,
     gap: 14,
   },
   nameInput: {
     padding: 12,
     borderWidth: 1,
-    borderColor: BORDER,
     borderRadius: 10,
     borderCurve: 'continuous',
     fontSize: 14,
     fontWeight: '600',
-    backgroundColor: ELEVATED,
-    color: TEXT_PRIMARY,
   },
   stepsContainer: {
     gap: 4,
@@ -312,9 +299,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#3b82f618',
+    backgroundColor: 'rgba(59,130,246,0.09)',
     borderWidth: 1,
-    borderColor: '#3b82f640',
+    borderColor: 'rgba(59,130,246,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -337,19 +324,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     borderCurve: 'continuous',
-    backgroundColor: ELEVATED,
     minHeight: 28,
     justifyContent: 'center',
   },
   stepTypePillActive: {
-    backgroundColor: '#3b82f618',
+    backgroundColor: 'rgba(59,130,246,0.09)',
     borderWidth: 1,
     borderColor: '#3b82f6',
   },
   stepTypeLabel: {
     fontSize: 11,
     fontWeight: '500',
-    color: TEXT_MUTED,
   },
   stepTypeLabelActive: {
     color: '#3b82f6',
@@ -359,13 +344,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: BORDER,
     borderRadius: 8,
     borderCurve: 'continuous',
     fontSize: 12,
     fontFamily: 'monospace',
-    backgroundColor: ELEVATED,
-    color: TEXT_SECONDARY,
     fontWeight: '500',
   },
   removeStepButton: {
@@ -391,11 +373,9 @@ const styles = StyleSheet.create({
   stepConnectorLine: {
     width: 1,
     height: 8,
-    backgroundColor: BORDER,
   },
   stepConnectorArrow: {
     fontSize: 8,
-    color: TEXT_MUTED,
   },
   formActions: {
     flexDirection: 'row',
@@ -408,15 +388,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: ELEVATED,
     minHeight: 44,
     justifyContent: 'center',
   },
   addStepText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_SECONDARY,
   },
   createButton: {
     flex: 1,
@@ -439,11 +416,9 @@ const styles = StyleSheet.create({
   emptyState: {
     padding: 48,
     alignItems: 'center',
-    backgroundColor: CARD,
     borderRadius: 16,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     borderStyle: 'dashed',
   },
   emptyIcon: {
@@ -452,23 +427,18 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: TEXT_SECONDARY,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 12,
-    color: TEXT_MUTED,
     marginTop: 4,
   },
   pipelineCard: {
-    backgroundColor: CARD,
     borderRadius: 14,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     padding: 16,
     marginBottom: 10,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
   },
   pipelineHeader: {
     flexDirection: 'row',
@@ -485,7 +455,6 @@ const styles = StyleSheet.create({
   pipelineName: {
     fontWeight: '700',
     fontSize: 15,
-    color: TEXT_PRIMARY,
     letterSpacing: -0.2,
   },
   pipelineStatusChip: {
@@ -541,11 +510,9 @@ const styles = StyleSheet.create({
   flowLine: {
     width: 12,
     height: 1,
-    backgroundColor: BORDER,
   },
   flowArrow: {
     fontSize: 10,
-    color: TEXT_MUTED,
   },
   flowStepCircle: {
     width: 24,
@@ -565,6 +532,5 @@ const styles = StyleSheet.create({
   flowStepName: {
     fontSize: 11,
     fontWeight: '500',
-    color: TEXT_SECONDARY,
   },
 });

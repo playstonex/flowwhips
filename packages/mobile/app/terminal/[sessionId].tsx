@@ -1,27 +1,35 @@
-import { StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { View, Text, Pressable } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { Button, Chip } from 'heroui-native';
 import { wsService } from '../../src/services/websocket';
 import { STATUS_COLORS, Colors } from '../../src/constants/theme';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 import { XtermWebView, type XtermWebViewRef } from '../../src/components/XtermWebView';
 
-const BG = '#09090b';
-const TOOLBAR_BG = '#111113';
-const ELEVATED = '#1a1a1e';
-const BORDER = 'rgba(255,255,255,0.06)';
-const TEXT_PRIMARY = '#f4f4f5';
-const TEXT_SECONDARY = '#a1a1aa';
-const TEXT_MUTED = '#71717a';
+const SHORTCUT_KEYS: { label: string; data: string }[] = [
+  { label: '↑', data: '\x1b[A' },
+  { label: '↓', data: '\x1b[B' },
+  { label: '←', data: '\x1b[D' },
+  { label: '→', data: '\x1b[C' },
+  { label: 'Esc', data: '\x1b' },
+  { label: 'Tab', data: '\t' },
+  { label: 'Ctrl+C', data: '\x03' },
+  { label: 'Ctrl+D', data: '\x04' },
+  { label: '/', data: '/' },
+  { label: '~', data: '~' },
+];
 
 export default function TerminalScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
   const xtermRef = useRef<XtermWebViewRef>(null);
+  const textInputRef = useRef<TextInput>(null);
   const [status, setStatus] = useState('running');
   const [xtermStatus, setXtermStatus] = useState<string>('loading...');
   const [wsConnected, setWsConnected] = useState(wsService.connected);
+  const [inputText, setInputText] = useState('');
+  const c = useThemeColors();
 
   const handleResize = useCallback(
     (cols: number, rows: number) => {
@@ -87,31 +95,34 @@ export default function TerminalScreen() {
     [sessionId],
   );
 
-  const STATUS_CHIP_COLOR: Record<string, 'success' | 'accent' | 'default' | 'warning' | 'danger'> = {
-    running: 'success',
-    thinking: 'accent',
-    executing: 'default',
-    waiting_input: 'warning',
-    idle: 'default',
-    stopped: 'danger',
-    starting: 'default',
-    error: 'danger',
-  };
+  const handleTextInput = useCallback(() => {
+    if (inputText) {
+      handleInput(inputText);
+      setInputText('');
+    }
+  }, [inputText, handleInput]);
+
+  const handleTextInputSend = useCallback(() => {
+    if (inputText) {
+      handleInput(inputText + '\n');
+      setInputText('');
+    }
+  }, [inputText, handleInput]);
 
   const statusColor = STATUS_COLORS[status] ?? Colors.surface[400];
   const isActive = status === 'running' || status === 'thinking' || status === 'executing';
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
         <View style={[styles.statusDotOuter, { borderColor: statusColor }]}>
           {isActive && <View style={[styles.statusDotPulse, { backgroundColor: statusColor }]} />}
           <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
         </View>
-        <Text style={styles.sessionId}>{sessionId?.slice(0, 8)}</Text>
+        <Text style={[styles.sessionId, { color: c.textSecondary }]}>{sessionId?.slice(0, 8)}</Text>
         <View style={[styles.statusChip, { backgroundColor: statusColor + '18' }]}>
           <Text style={[styles.statusChipText, { color: statusColor }]}>{status}</Text>
         </View>
@@ -120,13 +131,13 @@ export default function TerminalScreen() {
           onPress={() => router.push(`/agent/${sessionId}`)}
           style={styles.toolbarButton}
         >
-          <Text style={styles.toolbarButtonText}>Events</Text>
+          <Text style={[styles.toolbarButtonText, { color: c.textTertiary }]}>Events</Text>
         </Pressable>
         <Pressable
           onPress={() => router.back()}
-          style={styles.doneButton}
+          style={[styles.doneButton, { backgroundColor: c.elevated, borderColor: c.cardBorder }]}
         >
-          <Text style={styles.doneButtonText}>Done</Text>
+          <Text style={[styles.doneButtonText, { color: c.textPrimary }]}>Done</Text>
         </Pressable>
       </View>
 
@@ -138,6 +149,57 @@ export default function TerminalScreen() {
           setXtermStatus(loaded ? 'xterm loaded' : `xterm error: ${error}`);
         }}
       />
+
+      <View style={[styles.inputBar, { backgroundColor: c.card, borderTopColor: c.cardBorder }]}>
+        <TextInput
+          ref={textInputRef}
+          style={[styles.textInput, { backgroundColor: c.elevated, borderColor: c.inputBorder, color: c.textPrimary }]}
+          value={inputText}
+          onChangeText={setInputText}
+          onSubmitEditing={handleTextInputSend}
+          returnKeyType="send"
+          placeholder="Type command..."
+          placeholderTextColor={c.textTertiary}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {inputText.length > 0 && (
+          <>
+            <Pressable
+              onPress={handleTextInput}
+              style={[styles.sendBtn, { backgroundColor: c.elevated, borderColor: c.cardBorder }]}
+            >
+              <Text style={[styles.sendBtnText, { color: c.textSecondary }]}>Send</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleTextInputSend}
+              style={[styles.sendBtn, { backgroundColor: '#3b82f6' }]}
+            >
+              <Text style={styles.sendBtnEnter}>↵</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+
+      <View style={[styles.shortcutBar, { backgroundColor: c.card, borderTopColor: c.cardBorder }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shortcutScroll}>
+          {SHORTCUT_KEYS.map((key) => (
+            <Pressable
+              key={key.label}
+              onPress={() => handleInput(key.data)}
+              style={({ pressed }) => [
+                styles.shortcutKey,
+                {
+                  backgroundColor: pressed ? c.elevated : c.subtle,
+                  borderColor: c.cardBorder,
+                },
+              ]}
+            >
+              <Text style={[styles.shortcutKeyLabel, { color: c.textSecondary }]}>{key.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {!wsConnected && (
         <View style={styles.disconnectBanner}>
@@ -163,15 +225,13 @@ export default function TerminalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+  container: { flex: 1 },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-    backgroundColor: TOOLBAR_BG,
     gap: 6,
     minHeight: 44,
   },
@@ -197,7 +257,6 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   sessionId: {
-    color: TEXT_SECONDARY,
     fontSize: 12,
     fontFamily: 'monospace',
     fontWeight: '500',
@@ -225,23 +284,79 @@ const styles = StyleSheet.create({
   toolbarButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    color: TEXT_MUTED,
   },
   doneButton: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 8,
     borderCurve: 'continuous',
-    backgroundColor: ELEVATED,
     borderWidth: 1,
-    borderColor: BORDER,
     minHeight: 32,
     justifyContent: 'center',
   },
   doneButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: TEXT_PRIMARY,
+  },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    gap: 6,
+    borderTopWidth: 1,
+  },
+  textInput: {
+    flex: 1,
+    height: 36,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    fontSize: 14,
+    fontFamily: 'monospace',
+  },
+  sendBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  sendBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  sendBtnEnter: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  shortcutBar: {
+    borderTopWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 6,
+  },
+  shortcutScroll: {
+    gap: 4,
+    paddingRight: 8,
+  },
+  shortcutKey: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    minHeight: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shortcutKeyLabel: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   disconnectBanner: {
     position: 'absolute',
@@ -254,7 +369,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239,68,68,0.25)',
     overflow: 'hidden',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
   },
   disconnectBannerContent: {
     flexDirection: 'row',

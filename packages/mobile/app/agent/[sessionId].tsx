@@ -6,7 +6,7 @@ import { Button, Card, Chip } from 'heroui-native';
 import type { ParsedEvent } from '@baton/shared';
 import { useEventsStore } from '../../src/stores/events';
 import { wsService } from '../../src/services/websocket';
-import { Colors } from '../../src/constants/theme';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 const CHANGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   create: { bg: 'rgba(34,197,94,0.1)', text: '#4ade80', border: 'rgba(34,197,94,0.25)' },
@@ -23,14 +23,6 @@ const EVENT_TYPE_ICON: Record<string, string> = {
   error: '\u{26A0}',
 };
 
-const BG = '#09090b';
-const CARD = '#111113';
-const ELEVATED = '#1a1a1e';
-const BORDER = 'rgba(255,255,255,0.06)';
-const TEXT_PRIMARY = '#f4f4f5';
-const TEXT_SECONDARY = '#a1a1aa';
-const TEXT_MUTED = '#71717a';
-
 export default function AgentDetailScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
@@ -39,6 +31,7 @@ export default function AgentDetailScreen() {
   const toolUses = useEventsStore((s) => s.toolUses);
   const addEvent = useEventsStore((s) => s.addEvent);
   const clearEvents = useEventsStore((s) => s.clearEvents);
+  const c = useThemeColors();
 
   useEffect(() => {
     if (!sessionId) return;
@@ -68,20 +61,20 @@ export default function AgentDetailScreen() {
   const time = (ts: number) => new Date(ts).toLocaleTimeString();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.toolbar}>
+    <View style={[styles.container, { backgroundColor: c.bg }]}>
+      <View style={[styles.toolbar, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
         <View style={styles.toolbarLeft}>
-          <View style={styles.toolbarIcon}>
+          <View style={[styles.toolbarIcon, { backgroundColor: 'rgba(59,130,246,0.09)' }]}>
             <Text style={styles.toolbarIconText}>{'\u{1F916}'}</Text>
           </View>
           <View>
-            <Text style={styles.toolbarTitle}>Agent Detail</Text>
-            <Text style={styles.toolbarId}>{sessionId?.slice(0, 8)}</Text>
+            <Text style={[styles.toolbarTitle, { color: c.textPrimary }]}>Agent Detail</Text>
+            <Text style={[styles.toolbarId, { color: c.textTertiary }]}>{sessionId?.slice(0, 8)}</Text>
           </View>
         </View>
         <Pressable
           onPress={() => router.push(`/terminal/${sessionId}`)}
-          style={styles.terminalButton}
+          style={[styles.terminalButton, { backgroundColor: 'rgba(59,130,246,0.09)', borderColor: 'rgba(59,130,246,0.25)' }]}
         >
           <Text style={styles.terminalButtonText}>Terminal</Text>
           <Text style={styles.terminalButtonArrow}>{'\u{2192}'}</Text>
@@ -94,27 +87,27 @@ export default function AgentDetailScreen() {
           { label: 'Tool Calls', value: toolUses.length, color: '#a855f7', icon: '\u{1F527}' },
           { label: 'Total Events', value: events.length, color: '#22c55e', icon: '\u{26A1}' },
         ].map((s) => (
-          <View key={s.label} style={[styles.statCard, { borderTopColor: s.color }]}>
+          <View key={s.label} style={[styles.statCard, { backgroundColor: c.card, borderColor: c.cardBorder, borderTopColor: s.color }]}>
             <Text style={styles.statIcon}>{s.icon}</Text>
             <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-            <Text style={styles.statLabel}>{s.label}</Text>
+            <Text style={[styles.statLabel, { color: c.textTertiary }]}>{s.label}</Text>
           </View>
         ))}
       </View>
 
       {fileChanges.length > 0 && (
         <View style={styles.fileChangesSection}>
-          <Text style={styles.sectionTitle}>File Changes</Text>
-          <View style={styles.fileChangesList}>
+          <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>File Changes</Text>
+          <View style={[styles.fileChangesList, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
             {fileChanges.slice(0, 10).map((e, i) => {
               if (e.type !== 'file_change') return null;
-              const colors = CHANGE_COLORS[e.changeType] ?? { bg: ELEVATED, text: TEXT_SECONDARY, border: BORDER };
+              const colors = CHANGE_COLORS[e.changeType] ?? { bg: c.elevated, text: c.textSecondary, border: c.cardBorder };
               return (
-                <View key={i} style={[styles.fileChangeRow, { borderLeftColor: colors.border }]}>
+                <View key={i} style={[styles.fileChangeRow, { borderLeftColor: colors.border, borderBottomColor: c.cardBorder }]}>
                   <View style={[styles.changeTypeChip, { backgroundColor: colors.bg }]}>
                     <Text style={[styles.changeTypeText, { color: colors.text }]}>{e.changeType}</Text>
                   </View>
-                  <Text style={styles.changePath} numberOfLines={1}>{e.path}</Text>
+                  <Text style={[styles.changePath, { color: c.textSecondary }]} numberOfLines={1}>{e.path}</Text>
                 </View>
               );
             })}
@@ -123,18 +116,18 @@ export default function AgentDetailScreen() {
       )}
 
       <View style={styles.timelineHeader}>
-        <Text style={styles.sectionTitle}>Event Timeline</Text>
-        <Text style={styles.timelineCount}>{allEvents.length}</Text>
+        <Text style={[styles.sectionTitle, { color: c.textPrimary }]}>Event Timeline</Text>
+        <Text style={[styles.timelineCount, { color: c.textTertiary, backgroundColor: c.elevated }]}>{allEvents.length}</Text>
       </View>
       <FlatList
         data={allEvents}
         keyExtractor={(_, i) => String(i)}
         contentContainerStyle={styles.timelineList}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
             <Text style={styles.emptyIcon}>{'\u{23F3}'}</Text>
-            <Text style={styles.emptyText}>Waiting for events...</Text>
-            <Text style={styles.emptySubtext}>Events will appear as the agent runs</Text>
+            <Text style={[styles.emptyText, { color: c.textSecondary }]}>Waiting for events...</Text>
+            <Text style={[styles.emptySubtext, { color: c.textTertiary }]}>Events will appear as the agent runs</Text>
           </View>
         }
         renderItem={({ item: event, index }) => {
@@ -143,14 +136,14 @@ export default function AgentDetailScreen() {
           return (
             <View style={styles.timelineRow}>
               <View style={styles.timelineTrack}>
-                <View style={styles.timelineDot}>
+                <View style={[styles.timelineDot, { backgroundColor: c.elevated }]}>
                   <Text style={styles.timelineDotText}>{icon}</Text>
                 </View>
-                {index < allEvents.length - 1 && <View style={styles.timelineLine} />}
+                {index < allEvents.length - 1 && <View style={[styles.timelineLine, { backgroundColor: c.cardBorder }]} />}
               </View>
               <View style={styles.timelineContent}>
-                <Text style={styles.timelineTime}>{time(event.timestamp)}</Text>
-                <Text style={styles.timelineDesc} numberOfLines={1}>{desc}</Text>
+                <Text style={[styles.timelineTime, { color: c.textTertiary }]}>{time(event.timestamp)}</Text>
+                <Text style={[styles.timelineDesc, { color: c.textSecondary }]} numberOfLines={1}>{desc}</Text>
               </View>
             </View>
           );
@@ -173,15 +166,13 @@ function eventDescription(event: ParsedEvent): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+  container: { flex: 1 },
   toolbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-    backgroundColor: CARD,
   },
   toolbarLeft: {
     flexDirection: 'row',
@@ -193,7 +184,6 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 10,
     borderCurve: 'continuous',
-    backgroundColor: '#3b82f618',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -203,11 +193,9 @@ const styles = StyleSheet.create({
   toolbarTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_PRIMARY,
   },
   toolbarId: {
     fontSize: 11,
-    color: TEXT_MUTED,
     fontFamily: 'monospace',
     fontWeight: '500',
     marginTop: 1,
@@ -220,9 +208,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     borderCurve: 'continuous',
-    backgroundColor: '#3b82f618',
     borderWidth: 1,
-    borderColor: '#3b82f640',
     minHeight: 36,
   },
   terminalButtonText: {
@@ -241,16 +227,13 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: CARD,
     borderRadius: 14,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     borderTopWidth: 2,
     padding: 14,
     alignItems: 'center',
     gap: 2,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
   },
   statIcon: {
     fontSize: 18,
@@ -263,7 +246,6 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: TEXT_MUTED,
     fontWeight: '600',
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
@@ -274,18 +256,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fileChangesList: {
-    backgroundColor: CARD,
     borderRadius: 14,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     overflow: 'hidden',
     marginTop: 6,
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: TEXT_PRIMARY,
     letterSpacing: 0.2,
   },
   fileChangeRow: {
@@ -296,7 +275,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderLeftWidth: 3,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   changeTypeChip: {
     paddingHorizontal: 6,
@@ -314,7 +292,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'monospace',
     flex: 1,
-    color: TEXT_SECONDARY,
     fontWeight: '500',
   },
   timelineHeader: {
@@ -327,8 +304,6 @@ const styles = StyleSheet.create({
   timelineCount: {
     fontSize: 12,
     fontWeight: '600',
-    color: TEXT_MUTED,
-    backgroundColor: ELEVATED,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -342,11 +317,9 @@ const styles = StyleSheet.create({
   emptyState: {
     padding: 48,
     alignItems: 'center',
-    backgroundColor: CARD,
     borderRadius: 14,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     marginTop: 4,
   },
   emptyIcon: {
@@ -355,12 +328,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: TEXT_SECONDARY,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 12,
-    color: TEXT_MUTED,
     marginTop: 4,
   },
   timelineRow: {
@@ -376,7 +347,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderCurve: 'continuous',
-    backgroundColor: ELEVATED,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -386,7 +356,6 @@ const styles = StyleSheet.create({
   timelineLine: {
     width: 1.5,
     flex: 1,
-    backgroundColor: BORDER,
     minHeight: 12,
   },
   timelineContent: {
@@ -396,13 +365,11 @@ const styles = StyleSheet.create({
   },
   timelineTime: {
     fontSize: 10,
-    color: TEXT_MUTED,
     fontWeight: '500',
-    fontVariant: ['tabular-nums'] as any,
+    fontVariant: ['tabular-nums'] as const,
   },
   timelineDesc: {
     fontSize: 13,
-    color: TEXT_SECONDARY,
     lineHeight: 18,
   },
 });

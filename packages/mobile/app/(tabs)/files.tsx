@@ -5,6 +5,7 @@ import { Button, Card, Chip, Spinner } from 'heroui-native';
 import { useAgentStore } from '../../src/stores/agents';
 import { apiFetch } from '../../src/services/api';
 import { FilePreview } from '../../src/components/FilePreview';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 interface FileEntry {
   name: string;
@@ -12,14 +13,6 @@ interface FileEntry {
   isDir: boolean;
   size: number;
 }
-
-const BG = '#09090b';
-const CARD = '#111113';
-const ELEVATED = '#1a1a1e';
-const BORDER = 'rgba(255,255,255,0.06)';
-const TEXT_PRIMARY = '#f4f4f5';
-const TEXT_SECONDARY = '#a1a1aa';
-const TEXT_MUTED = '#71717a';
 
 export default function FilesScreen() {
   const agents = useAgentStore((s) => s.agents);
@@ -29,6 +22,7 @@ export default function FilesScreen() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
+  const c = useThemeColors();
 
   useEffect(() => {
     if (activeAgents.length > 0 && currentPath === '/') fetchDir(activeAgents[0].projectPath);
@@ -53,14 +47,14 @@ export default function FilesScreen() {
 
   if (fileContent !== null) {
     return (
-      <View style={s.container}>
-        <View style={s.fileHeader}>
-          <Pressable onPress={() => setFileContent(null)} style={s.backButton}>
-            <Text style={s.backButtonText}>{'\u{2190}'} Back</Text>
+      <View style={[s.container, { backgroundColor: c.bg }]}>
+        <View style={[s.fileHeader, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
+          <Pressable onPress={() => setFileContent(null)} style={[s.backButton, { backgroundColor: c.elevated }]}>
+            <Text style={[s.backButtonText, { color: c.textSecondary }]}>{'\u{2190}'} Back</Text>
           </Pressable>
           <View style={s.fileNameContainer}>
-            <Text style={s.fileNameLabel}>Preview</Text>
-            <Text style={s.fileNameText} numberOfLines={1}>{fileName}</Text>
+            <Text style={[s.fileNameLabel, { color: c.textTertiary }]}>Preview</Text>
+            <Text style={[s.fileNameText, { color: c.textPrimary }]} numberOfLines={1}>{fileName}</Text>
           </View>
         </View>
         <FilePreview fileName={fileName} content={fileContent} />
@@ -69,19 +63,19 @@ export default function FilesScreen() {
   }
 
   return (
-    <View style={s.container}>
-      <View style={s.breadcrumb}>
+    <View style={[s.container, { backgroundColor: c.bg }]}>
+      <View style={[s.breadcrumb, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
         <Pressable onPress={() => fetchDir('/')} style={s.bcButton}>
-          <Text style={s.bcRoot}>~</Text>
+          <Text style={[s.bcRoot, { color: c.textSecondary }]}>~</Text>
         </Pressable>
         {pathParts.map((part, i) => {
           const path = '/' + pathParts.slice(0, i + 1).join('/');
           const isLast = i === pathParts.length - 1;
           return (
             <View key={path} style={s.bcSegment}>
-              <Text style={s.bcSeparator}>/</Text>
+              <Text style={[s.bcSeparator, { color: c.cardBorder }]}>/</Text>
               <Pressable onPress={() => fetchDir(path)} style={s.bcButton}>
-                <Text style={[s.bcPart, isLast && s.bcActive]}>{part}</Text>
+                <Text style={[s.bcPart, !isLast && { color: c.textTertiary }, isLast && s.bcActive]}>{part}</Text>
               </Pressable>
             </View>
           );
@@ -89,8 +83,8 @@ export default function FilesScreen() {
       </View>
 
       {activeAgents.length > 0 && (
-        <View style={s.shortcuts}>
-          <Text style={s.shortcutLabel}>Projects</Text>
+        <View style={[s.shortcuts, { backgroundColor: c.card, borderBottomColor: c.cardBorder }]}>
+          <Text style={[s.shortcutLabel, { color: c.textTertiary }]}>Projects</Text>
           <View style={s.shortcutChips}>
             {activeAgents.map((a) => {
               const active = currentPath === a.projectPath;
@@ -98,9 +92,9 @@ export default function FilesScreen() {
                 <Pressable
                   key={a.id}
                   onPress={() => fetchDir(a.projectPath)}
-                  style={[s.shortcutChip, active && s.shortcutChipActive]}
+                  style={[s.shortcutChip, { backgroundColor: c.elevated, borderColor: c.cardBorder }, active && s.shortcutChipActive]}
                 >
-                  <Text style={[s.shortcutChipText, active && s.shortcutChipTextActive]}>
+                  <Text style={[s.shortcutChipText, { color: c.textSecondary }, active && s.shortcutChipTextActive]}>
                     {a.projectPath.split('/').pop()}
                   </Text>
                 </Pressable>
@@ -118,27 +112,27 @@ export default function FilesScreen() {
           keyExtractor={(item) => item.path}
           contentContainerStyle={s.list}
           ListEmptyComponent={
-            <View style={s.empty}>
+            <View style={[s.empty, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
               <Text style={s.emptyIcon}>{'\u{1F4C2}'}</Text>
-              <Text style={s.emptyText}>Empty directory</Text>
-              <Text style={s.emptySubtext}>No files or folders found</Text>
+              <Text style={[s.emptyText, { color: c.textSecondary }]}>Empty directory</Text>
+              <Text style={[s.emptySubtext, { color: c.textTertiary }]}>No files or folders found</Text>
             </View>
           }
           renderItem={({ item }) => (
             <Pressable
               onPress={() => (item.isDir ? fetchDir(item.path) : openFile(item.path))}
-              style={({ pressed }) => [s.fileRow, pressed && s.fileRowPressed]}
+              style={({ pressed }) => [s.fileRow, { borderBottomColor: c.cardBorder }, pressed && { backgroundColor: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }]}
             >
-              <View style={[s.fileIconContainer, { backgroundColor: item.isDir ? '#3b82f618' : 'rgba(255,255,255,0.04)' }]}>
-                <Text style={[s.fileIcon, { color: item.isDir ? '#60a5fa' : TEXT_MUTED }]}>
+              <View style={[s.fileIconContainer, { backgroundColor: item.isDir ? 'rgba(59,130,246,0.09)' : c.elevated }]}>
+                <Text style={[s.fileIcon, { color: item.isDir ? c.textAccent : c.textTertiary }]}>
                   {item.isDir ? '\u{1F4C1}' : '\u{1F4C4}'}
                 </Text>
               </View>
-              <Text style={[s.fileMono, item.isDir && s.fileDirName]} numberOfLines={1}>
+              <Text style={[s.fileMono, { color: c.textSecondary }, item.isDir && { color: c.textPrimary, fontWeight: '600' }]} numberOfLines={1}>
                 {item.name}
               </Text>
-              {!item.isDir && <Text style={s.fileSize}>{fmt(item.size)}</Text>}
-              {item.isDir && <Text style={s.fileChevron}>{'\u{203A}'}</Text>}
+              {!item.isDir && <Text style={[s.fileSize, { color: c.textTertiary }]}>{fmt(item.size)}</Text>}
+              {item.isDir && <Text style={[s.fileChevron, { color: c.textTertiary }]}>{'\u{203A}'}</Text>}
             </Pressable>
           )}
         />
@@ -154,14 +148,12 @@ function fmt(b: number): string {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
+  container: { flex: 1 },
   fileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-    backgroundColor: CARD,
     gap: 12,
   },
   backButton: {
@@ -169,14 +161,12 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderCurve: 'continuous',
-    backgroundColor: ELEVATED,
     minHeight: 36,
     justifyContent: 'center',
   },
   backButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_SECONDARY,
   },
   fileNameContainer: {
     flex: 1,
@@ -184,14 +174,12 @@ const s = StyleSheet.create({
   fileNameLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: TEXT_MUTED,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },
   fileNameText: {
     fontWeight: '600',
     fontSize: 14,
-    color: TEXT_PRIMARY,
     fontFamily: 'monospace',
     marginTop: 1,
   },
@@ -201,8 +189,6 @@ const s = StyleSheet.create({
     padding: 14,
     gap: 2,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-    backgroundColor: CARD,
     alignItems: 'center',
   },
   bcButton: {
@@ -212,7 +198,6 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   bcRoot: {
-    color: TEXT_SECONDARY,
     fontSize: 13,
     fontFamily: 'monospace',
     fontWeight: '600',
@@ -222,32 +207,27 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   bcSeparator: {
-    color: BORDER,
     fontSize: 14,
     fontWeight: '400',
     marginHorizontal: 2,
   },
   bcPart: {
-    color: TEXT_MUTED,
     fontSize: 13,
     fontFamily: 'monospace',
   },
   bcActive: {
-    color: '#60a5fa',
+    color: '#3b82f6',
     fontWeight: '600',
   },
   shortcuts: {
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 6,
-    backgroundColor: CARD,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
   },
   shortcutLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: TEXT_MUTED,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.8,
     marginBottom: 6,
@@ -262,20 +242,17 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderCurve: 'continuous',
-    backgroundColor: ELEVATED,
     borderWidth: 1,
-    borderColor: BORDER,
     minHeight: 32,
     justifyContent: 'center',
   },
   shortcutChipActive: {
-    backgroundColor: '#3b82f618',
+    backgroundColor: 'rgba(59,130,246,0.09)',
     borderColor: '#3b82f6',
   },
   shortcutChipText: {
     fontSize: 12,
     fontWeight: '500',
-    color: TEXT_SECONDARY,
     fontFamily: 'monospace',
   },
   shortcutChipTextActive: {
@@ -293,11 +270,9 @@ const s = StyleSheet.create({
   empty: {
     padding: 48,
     alignItems: 'center',
-    backgroundColor: CARD,
     borderRadius: 14,
     borderCurve: 'continuous',
     borderWidth: 1,
-    borderColor: BORDER,
     marginTop: 8,
   },
   emptyIcon: {
@@ -306,12 +281,10 @@ const s = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: TEXT_SECONDARY,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 12,
-    color: TEXT_MUTED,
     marginTop: 4,
   },
   fileRow: {
@@ -322,11 +295,7 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
     minHeight: 44,
-  },
-  fileRowPressed: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   fileIconContainer: {
     width: 32,
@@ -343,21 +312,14 @@ const s = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontFamily: 'monospace',
-    color: TEXT_SECONDARY,
     fontWeight: '400',
-  },
-  fileDirName: {
-    fontWeight: '600',
-    color: TEXT_PRIMARY,
   },
   fileSize: {
     fontSize: 11,
-    color: TEXT_MUTED,
     fontWeight: '500',
   },
   fileChevron: {
     fontSize: 18,
-    color: TEXT_MUTED,
     fontWeight: '300',
   },
 });

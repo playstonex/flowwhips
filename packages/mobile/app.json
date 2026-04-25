@@ -8,13 +8,13 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.baton.mobile"
+      "bundleIdentifier": "com.playstone.baton"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.baton.mobile"
+      "package": "com.playstone.baton"
     },
     "web": {
       "bundler": "metro",
