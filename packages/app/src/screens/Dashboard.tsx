@@ -12,19 +12,14 @@ const AGENT_OPTIONS: {
   desc: string;
 }[] = [
   {
-    type: 'claude-code',
-    label: 'Claude Code',
-    desc: 'Deep reasoning for large code changes and reviews.',
-  },
-  {
     type: 'codex',
     label: 'Codex',
-    desc: 'Fast execution loops for shipping product work quickly.',
+    desc: 'Remote AI coding agent.',
   },
   {
-    type: 'opencode',
-    label: 'OpenCode',
-    desc: 'Flexible open-source runtime for portable workflows.',
+    type: 'claude-code',
+    label: 'Claude Code (PTY)',
+    desc: 'Terminal-based for deep code changes.',
   },
 ];
 
@@ -44,7 +39,7 @@ export function DashboardScreen() {
   const agents = useAgentStore((s) => s.agents);
   const { addAgent, removeAgent, setAgents, updateAgentStatus } = useAgentStore();
   const [projectPath, setProjectPath] = useState('');
-  const [agentType, setAgentType] = useState<AgentType>('claude-code');
+  const [agentType, setAgentType] = useState<AgentType>('codex');
   const [loading, setLoading] = useState(false);
   const [daemonOnline, setDaemonOnline] = useState(false);
 
@@ -118,7 +113,7 @@ export function DashboardScreen() {
         status: 'running',
         startedAt: new Date().toISOString(),
       });
-      navigate(`/terminal/${data.sessionId}`);
+      navigate(`/chat/${data.sessionId}`);
     } catch (err) {
       alert(`Failed to connect to Daemon: ${err}`);
     } finally {
@@ -238,7 +233,7 @@ export function DashboardScreen() {
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                onOpen={() => navigate(`/terminal/${agent.id}`)}
+                onOpen={() => navigate(`/chat/${agent.id}`)}
                 onStop={() => stopAgent(agent.id)}
               />
             ))}

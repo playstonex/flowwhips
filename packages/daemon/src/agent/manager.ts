@@ -1,4 +1,4 @@
-import type { AgentConfig, AgentProcess, ParsedEvent } from '@baton/shared';
+import type { AgentConfig, AgentProcess, ParsedEvent, SdkAgentAdapter } from '@baton/shared';
 import { VALID_TRANSITIONS, generateId } from '@baton/shared';
 import type { AgentState, AgentSnapshot, TimelineItem } from '@baton/shared';
 import type { BaseAgentAdapter } from './adapter.js';
@@ -15,10 +15,17 @@ interface IPty {
   onExit(cb: (e: { exitCode: number; signal?: number }) => void): void;
 }
 
+interface SdkSession {
+  write: (input: string) => void;
+  stop: () => Promise<void>;
+}
+
 interface ManagedAgent {
   process: AgentProcess;
   adapter: BaseAgentAdapter | null;
   pty: IPty | null;
+  sdk: SdkSession | null;
+  sdkAdapter: SdkAgentAdapter | null;
   state: AgentState;
   cols: number;
   rows: number;
@@ -199,6 +206,8 @@ export class AgentManager {
               process: agentProcess,
               adapter: null,
               pty: null,
+              sdk: null,
+              sdkAdapter: null,
               state: snapshot.state,
               cols: snapshot.cols ?? DEFAULT_COLS,
               rows: snapshot.rows ?? DEFAULT_ROWS,
@@ -222,6 +231,16 @@ export class AgentManager {
   // ── Agent Lifecycle ────────────────────────────────────────────
 
   async start(config: AgentConfig, adapter: BaseAgentAdapter): Promise<string> {
+    const sdkAdapter = this.asSdkAdapter(adapter);
+    if (sdkAdapter) {
+      console.log(`[baton] manager.start: SDK mode, adapter=${adapter.name}`);
+      return this.startSdk(config, sdkAdapter);
+    }
+    console.log(`[baton] manager.start: PTY mode, adapter=${adapter.name}`);
+    return this.startPty(config, adapter);
+  }
+
+  private async startPty(config: AgentConfig, adapter: BaseAgentAdapter): Promise<string> {
     const id = generateId();
     const spawnConfig = adapter.buildSpawnConfig(config);
     const cols = DEFAULT_COLS;
@@ -247,6 +266,8 @@ export class AgentManager {
       process: agentProcess,
       adapter,
       pty,
+      sdk: null,
+      sdkAdapter: null,
       state: { status: 'initializing', at: Date.now() },
       cols,
       rows,
@@ -339,6 +360,86 @@ export class AgentManager {
     return id;
   }
 
+  private async startSdk(
+    config: AgentConfig,
+    sdkAdapter: SdkAgentAdapter,
+  ): Promise<string> {
+    const id = generateId();
+    const cols = DEFAULT_COLS;
+    const rows = DEFAULT_ROWS;
+
+    const agentProcess: AgentProcess = {
+      id,
+      type: config.type,
+      projectPath: config.projectPath,
+      status: 'starting',
+      startedAt: new Date().toISOString(),
+    };
+
+    const managed: ManagedAgent = {
+      process: agentProcess,
+      adapter: null,
+      pty: null,
+      sdk: null,
+      sdkAdapter,
+      state: { status: 'initializing', at: Date.now() },
+      cols,
+      rows,
+      outputHistory: [],
+      eventHistory: [],
+      timeline: [],
+      eventCallbacks: new Set(),
+      rawCallbacks: new Set(),
+      firstOutputReceived: false,
+    };
+
+    this.agents.set(id, managed);
+    console.log(`[baton] startSdk: id=${id.slice(0,8)} calling adapter.startSession...`);
+
+    const { write, stop } = await sdkAdapter.startSession(config, (event: ParsedEvent) => {
+      console.log(`[baton] startSdk: event type=${event.type} id=${id.slice(0,8)}`);
+      managed.eventHistory.push(event);
+      if (managed.eventHistory.length > MAX_EVENT_HISTORY) {
+        managed.eventHistory = managed.eventHistory.slice(-EVENT_TRIM_TO);
+      }
+
+      if (managed.state.status === 'initializing') {
+        this.transition(id, 'running');
+      }
+
+      if (event.type === 'tool_use' && managed.state.status === 'running') {
+        managed.state = {
+          ...managed.state,
+          toolCount: managed.state.toolCount + 1,
+        };
+      }
+
+      if (event.type === 'tool_use') {
+        this.pushTimeline(managed, 'tool_use', `Tool: ${event.tool}`);
+      } else if (event.type === 'error') {
+        this.pushTimeline(managed, 'error', event.message);
+      }
+
+      for (const cb of managed.eventCallbacks) cb(event, id);
+    });
+
+    managed.sdk = { write, stop };
+    console.log(`[baton] startSdk: id=${id.slice(0,8)} session started, sdk.write=${typeof write}`);
+
+    if (managed.state.status === 'initializing') {
+      this.transition(id, 'running');
+    }
+    this.persist(id);
+    return id;
+  }
+
+  private asSdkAdapter(adapter: BaseAgentAdapter): SdkAgentAdapter | null {
+    if ('startSession' in adapter && typeof (adapter as Record<string, unknown>).startSession === 'function') {
+      return adapter as unknown as SdkAgentAdapter;
+    }
+    return null;
+  }
+
   async stop(id: string): Promise<void> {
     const managed = this.agents.get(id);
     if (!managed) throw new Error(`Agent ${id} not found`);
@@ -347,11 +448,14 @@ export class AgentManager {
     managed.eventCallbacks.clear();
     managed.rawCallbacks.clear();
 
+    if (managed.sdk) {
+      await managed.sdk.stop();
+    }
     if (managed.pty) {
       managed.pty.kill();
     }
 
-    if (!managed.pty) {
+    if (!managed.pty && !managed.sdk) {
       managed.process.stoppedAt = new Date().toISOString();
       managed.state = { status: 'stopped', at: Date.now(), exitCode: 0 };
       managed.process.status = 'stopped';
@@ -395,8 +499,68 @@ export class AgentManager {
     const managed = this.agents.get(id);
     if (!managed) throw new Error(`Agent ${id} not found`);
     if (managed.state.status === 'stopped') throw new Error(`Agent ${id} is stopped`);
-    if (!managed.pty) throw new Error(`Agent ${id} has no PTY`);
-    managed.pty.write(data);
+    if (managed.pty) {
+      managed.pty.write(data);
+    } else if (managed.sdk) {
+      managed.sdk.write(data);
+    } else {
+      throw new Error(`Agent ${id} has no active session`);
+    }
+  }
+
+  chatWrite(id: string, content: string): void {
+    const managed = this.agents.get(id);
+    if (!managed) throw new Error(`Agent ${id} not found`);
+    if (managed.state.status === 'stopped') throw new Error(`Agent ${id} is stopped`);
+
+    console.log(`[baton] chatWrite: id=${id.slice(0,8)} sdk=${!!managed.sdk} pty=${!!managed.pty} content="${content.slice(0, 60)}"`);
+
+    if (managed.sdk) {
+      managed.sdk.write(content);
+    } else if (managed.pty) {
+      managed.pty.write(content + '\n');
+    } else {
+      throw new Error(`Agent ${id} has no active session`);
+    }
+  }
+
+  steer(id: string, content: string): void {
+    const managed = this.agents.get(id);
+    if (!managed) throw new Error(`Agent ${id} not found`);
+    if (managed.state.status === 'stopped') throw new Error(`Agent ${id} is stopped`);
+
+    if (managed.sdk) {
+      managed.sdk.write(content);
+    } else if (managed.pty) {
+      managed.pty.write('\x1b');
+      setTimeout(() => {
+        if (managed.pty) managed.pty.write(content + '\n');
+      }, 200);
+    } else {
+      throw new Error(`Agent ${id} has no active session`);
+    }
+
+    for (const cb of managed.eventCallbacks) {
+      cb({ type: 'chat_message', role: 'user', content, timestamp: Date.now() }, id);
+    }
+  }
+
+  async cancelTurn(id: string): Promise<void> {
+    const managed = this.agents.get(id);
+    if (!managed) throw new Error(`Agent ${id} not found`);
+    if (managed.state.status === 'stopped') throw new Error(`Agent ${id} is stopped`);
+
+    if (managed.sdk) {
+      await managed.sdk.stop();
+    } else if (managed.pty) {
+      managed.pty.write('\x03');
+    }
+  }
+
+  registerSdk(id: string, sdk: SdkSession): void {
+    const managed = this.agents.get(id);
+    if (!managed) throw new Error(`Agent ${id} not found`);
+    managed.sdk = sdk;
   }
 
   resize(id: string, cols: number, rows: number): void {
@@ -441,5 +605,56 @@ export class AgentManager {
     if (!managed) throw new Error(`Agent ${id} not found`);
     managed.rawCallbacks.add(callback);
     return () => managed.rawCallbacks.delete(callback);
+  }
+
+  async approve(id: string, reason?: string): Promise<void> {
+    const managed = this.agents.get(id);
+    if (!managed?.sdkAdapter?.approve) return;
+    await managed.sdkAdapter.approve(reason);
+  }
+
+  async reject(id: string, reason?: string): Promise<void> {
+    const managed = this.agents.get(id);
+    if (!managed?.sdkAdapter?.reject) return;
+    await managed.sdkAdapter.reject(reason);
+  }
+
+  // ── Model Management ────────────────────────────────────────────
+
+  async listModels(id: string): Promise<string[]> {
+    const adapter = this.getAdapterWithModels(id);
+    if (!adapter) return [];
+    if ('listModels' in adapter && typeof adapter.listModels === 'function') {
+      return adapter.listModels();
+    }
+    return [];
+  }
+
+  setModel(id: string, model: string): void {
+    const adapter = this.getAdapterWithModels(id);
+    if (adapter) adapter.selectedModel = model;
+  }
+
+  getSelectedModel(id: string): string | undefined {
+    const adapter = this.getAdapterWithModels(id);
+    return adapter?.selectedModel ?? undefined;
+  }
+
+  private getAdapterWithModels(id: string): { selectedModel: string | null; listModels?: () => Promise<string[]> } | null {
+    const managed = this.agents.get(id);
+    if (!managed) return null;
+
+    if (managed.sdkAdapter && typeof managed.sdkAdapter === 'object') {
+      const sa = managed.sdkAdapter as unknown as Record<string, unknown>;
+      if ('selectedModel' in sa) {
+        return sa as unknown as { selectedModel: string | null; listModels?: () => Promise<string[]> };
+      }
+    }
+
+    const adapter = managed.adapter as Record<string, unknown> | null;
+    if (adapter && 'selectedModel' in adapter) {
+      return adapter as unknown as { selectedModel: string | null; listModels?: () => Promise<string[]> };
+    }
+    return null;
   }
 }

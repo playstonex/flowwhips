@@ -12,9 +12,8 @@ import { STATUS_COLORS } from '../../src/constants/theme';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 
 const AGENT_OPTIONS: { type: AgentType; label: string; desc: string }[] = [
-  { type: 'claude-code', label: 'Claude Code', desc: 'Deep code work' },
-  { type: 'codex', label: 'Codex', desc: 'Fast execution' },
-  { type: 'opencode', label: 'OpenCode', desc: 'Open stack' },
+  { type: 'codex', label: 'Codex', desc: 'Remote AI coding agent' },
+  { type: 'claude-code', label: 'Claude Code (PTY)', desc: 'Terminal-based' },
 ];
 
 export default function DashboardScreen() {
@@ -26,7 +25,7 @@ export default function DashboardScreen() {
   const removeAgent = useAgentStore((s) => s.removeAgent);
   const connected = useConnectionStore((s) => s.connected);
   const [projectPath, setProjectPath] = useState('');
-  const [agentType, setAgentType] = useState<AgentType>('claude-code');
+  const [agentType, setAgentType] = useState<AgentType>('codex');
   const [loading, setLoading] = useState(false);
   const c = useThemeColors();
 
@@ -81,7 +80,7 @@ export default function DashboardScreen() {
         status: 'running',
         startedAt: new Date().toISOString(),
       });
-      router.push(`/terminal/${data.sessionId}`);
+      router.push(`/chat/${data.sessionId}`);
     } catch (err) {
       Alert.alert('Error', `Failed: ${err}`);
     } finally {
@@ -226,7 +225,7 @@ export default function DashboardScreen() {
       renderItem={({ item: agent }) => (
         <AgentRow
           agent={agent}
-          onOpen={() => agent.status !== 'stopped' && router.push(`/terminal/${agent.id}`)}
+          onOpen={() => agent.status !== 'stopped' && router.push(`/chat/${agent.id}`)}
           onStop={() => stopAgent(agent.id)}
         />
       )}

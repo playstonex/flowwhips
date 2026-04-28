@@ -197,6 +197,9 @@ export function TerminalScreen() {
           <Chip size="sm" variant="soft" color={connected ? 'success' : 'danger'}>
             {connected ? 'Connected' : 'Disconnected'}
           </Chip>
+          <Button size="sm" variant="outline" onPress={() => navigate(`/chat/${sessionId}`)}>
+            Chat
+          </Button>
           <Button size="sm" variant="outline" onPress={() => navigate(`/agent/${sessionId}`)}>
             Events
           </Button>

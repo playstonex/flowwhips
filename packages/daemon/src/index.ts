@@ -89,6 +89,7 @@ export function createDaemon(port = DEFAULT_PORT) {
 
   app.post('/api/agents/start', async (c) => {
     const body = await c.req.json<StartAgentRequest>();
+    console.log(`[baton] POST /api/agents/start: type=${body.agentType} mode=${body.mode ?? 'pty'} path=${body.projectPath}`);
     const adapter = createAdapter(body.agentType, body.mode ?? 'pty');
 
     const absPath = resolve(body.projectPath);
@@ -98,15 +99,22 @@ export function createDaemon(port = DEFAULT_PORT) {
     }
     allowedProjectPaths.add(absPath);
 
-    const sessionId = await agentManager.start(
-      {
-        type: body.agentType,
-        projectPath: body.projectPath,
-        args: body.args,
-        env: body.env,
-      },
-      adapter,
-    );
+    let sessionId: string;
+    try {
+      sessionId = await agentManager.start(
+        {
+          type: body.agentType,
+          projectPath: body.projectPath,
+          args: body.args,
+          env: body.env,
+        },
+        adapter,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error starting agent';
+      console.error(`[baton] POST /api/agents/start failed:`, msg);
+      return c.json({ error: msg }, 400);
+    }
 
     transport.registerSessionEvents(sessionId);
 
@@ -121,6 +129,7 @@ export function createDaemon(port = DEFAULT_PORT) {
       watchers.set(body.projectPath, watcher);
     }
 
+    console.log(`[baton] POST /api/agents/start done: sessionId=${sessionId.slice(0,8)}`);
     return c.json({ sessionId, agentType: body.agentType, status: 'running' });
   });
 
@@ -320,6 +329,20 @@ export function createDaemon(port = DEFAULT_PORT) {
             } catch {
               /* session might not exist */
             }
+          } else if (clientMsg.type === 'chat_input' && clientMsg.sessionId) {
+            try {
+              agentManager.chatWrite(clientMsg.sessionId, clientMsg.content);
+            } catch {
+              /* session might not exist */
+            }
+          } else if (clientMsg.type === 'steer_input' && clientMsg.sessionId) {
+            try {
+              agentManager.steer(clientMsg.sessionId, clientMsg.content);
+            } catch {
+              /* session might not exist */
+            }
+          } else if (clientMsg.type === 'cancel_turn' && clientMsg.sessionId) {
+            agentManager.cancelTurn(clientMsg.sessionId).catch(() => {});
           }
         }
       },

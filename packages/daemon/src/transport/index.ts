@@ -81,6 +81,77 @@ export class Transport {
         break;
       }
 
+      case 'chat_input': {
+        console.log(`[baton] transport: chat_input session=${msg.sessionId.slice(0,8)} content="${msg.content.slice(0, 60)}" model=${msg.model ?? 'default'}`);
+        try {
+          if (msg.model) this.agentManager.setModel(msg.sessionId, msg.model);
+          this.agentManager.chatWrite(msg.sessionId, msg.content);
+          console.log('[baton] transport: chatWrite succeeded');
+        } catch (err) {
+          const msg_err = err instanceof Error ? err.message : `Session ${msg.sessionId} not found`;
+          console.error('[baton] transport: chatWrite error:', msg_err);
+          this.send(clientId, { type: 'error', message: msg_err });
+        }
+        break;
+      }
+
+      case 'steer_input': {
+        try {
+          this.agentManager.steer(msg.sessionId, msg.content);
+        } catch (err) {
+          this.send(clientId, {
+            type: 'error',
+            message: err instanceof Error ? err.message : `Session ${msg.sessionId} not found`,
+          });
+        }
+        break;
+      }
+
+      case 'cancel_turn': {
+        this.agentManager.cancelTurn(msg.sessionId).catch((err) => {
+          this.send(clientId, {
+            type: 'error',
+            message: err instanceof Error ? err.message : `Cancel failed for ${msg.sessionId}`,
+          });
+        });
+        break;
+      }
+
+      case 'approve_input': {
+        this.agentManager.approve(msg.sessionId, msg.reason).catch((err) => {
+          this.send(clientId, {
+            type: 'error',
+            message: err instanceof Error ? err.message : `Approve failed for ${msg.sessionId}`,
+          });
+        });
+        break;
+      }
+
+      case 'reject_input': {
+        this.agentManager.reject(msg.sessionId, msg.reason).catch((err) => {
+          this.send(clientId, {
+            type: 'error',
+            message: err instanceof Error ? err.message : `Reject failed for ${msg.sessionId}`,
+          });
+        });
+        break;
+      }
+
+      case 'model_list_request': {
+        this.agentManager.listModels(msg.sessionId).then((models) => {
+          const selected = this.agentManager.getSelectedModel(msg.sessionId);
+          this.send(clientId, { type: 'model_list', sessionId: msg.sessionId, models, selected });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to list models' });
+        });
+        break;
+      }
+
+      case 'model_select': {
+        this.agentManager.setModel(msg.sessionId, msg.model);
+        break;
+      }
+
       case 'control':
         this.handleControl(clientId, msg);
         break;
@@ -201,10 +272,15 @@ export class Transport {
     const unsubEvent = this.agentManager.onEvent(sessionId, (event: ParsedEvent, sid) => {
       const msg: DaemonMessage = { type: 'parsed_event', sessionId: sid, event };
       const payload = JSON.stringify(msg);
+      let sent = 0;
       for (const client of this.clients.values()) {
         if (client.subscriptions.has(sid) && client.ws.readyState === OPEN) {
           client.ws.send(payload);
+          sent++;
         }
+      }
+      if (event.type === 'chat_message' || event.type === 'raw_output') {
+        console.log(`[baton] transport: broadcast event=${event.type} session=${sid.slice(0,8)} sent_to=${sent} clients`);
       }
 
       if (event.type === 'status_change') {

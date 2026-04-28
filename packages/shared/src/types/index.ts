@@ -1,7 +1,7 @@
 import type { AgentConfig, SpawnConfig } from './agent.js';
 
 // Agent types
-export type AgentType = 'claude-code' | 'claude-code-sdk' | 'codex' | 'opencode' | 'custom';
+export type AgentType = 'claude-code' | 'claude-code-sdk' | 'codex' | 'codex-sdk' | 'opencode' | 'custom';
 
 export type AgentStatus =
   | 'starting'
@@ -33,7 +33,9 @@ export type ParsedEvent =
   | CommandExecEvent
   | ThinkingEvent
   | ErrorEvent
-  | RawOutputEvent;
+  | RawOutputEvent
+  | ChatMessageEvent
+  | WaitingApprovalEvent;
 
 export interface StatusChangeEvent {
   type: 'status_change';
@@ -81,6 +83,20 @@ export interface RawOutputEvent {
   timestamp: number;
 }
 
+export type ChatRole = 'user' | 'assistant';
+
+export interface ChatMessageEvent {
+  type: 'chat_message';
+  role: ChatRole;
+  content: string;
+  timestamp: number;
+}
+
+export interface WaitingApprovalEvent {
+  type: 'waiting_approval';
+  timestamp: number;
+}
+
 // Agent Adapter interface
 export interface AgentAdapter {
   readonly name: string;
@@ -96,6 +112,8 @@ export interface SdkAgentAdapter extends AgentAdapter {
     config: AgentConfig,
     onEvent: (event: ParsedEvent) => void,
   ): Promise<{ write: (input: string) => void; stop: () => Promise<void> }>;
+  approve?(reason?: string): Promise<void>;
+  reject?(reason?: string): Promise<void>;
 }
 
 export type AdapterMode = 'pty' | 'sdk' | 'auto';

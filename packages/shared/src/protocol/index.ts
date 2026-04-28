@@ -8,12 +8,65 @@ import type {
 } from '../types/index.js';
 
 // WebSocket message types: Client → Daemon
-export type ClientMessage = TerminalInputMessage | ControlMessage;
+export type ClientMessage =
+  | TerminalInputMessage
+  | ChatInputMessage
+  | SteerInputMessage
+  | CancelTurnMessage
+  | ApproveInputMessage
+  | RejectInputMessage
+  | ModelListRequestMessage
+  | ModelSelectMessage
+  | ControlMessage;
 
 export interface TerminalInputMessage {
   type: 'terminal_input';
   sessionId: string;
   data: string;
+}
+
+/** Conversational message — routed to SDK messageQueue (preferred) or PTY stdin. */
+export interface ChatInputMessage {
+  type: 'chat_input';
+  sessionId: string;
+  content: string;
+  model?: string;
+}
+
+/** Mid-turn steering — injects a follow-up while the agent is still running (SDK only). */
+export interface SteerInputMessage {
+  type: 'steer_input';
+  sessionId: string;
+  content: string;
+}
+
+/** Cancel the current in-progress turn. */
+export interface CancelTurnMessage {
+  type: 'cancel_turn';
+  sessionId: string;
+}
+
+export interface ApproveInputMessage {
+  type: 'approve_input';
+  sessionId: string;
+  reason?: string;
+}
+
+export interface RejectInputMessage {
+  type: 'reject_input';
+  sessionId: string;
+  reason?: string;
+}
+
+export interface ModelListRequestMessage {
+  type: 'model_list_request';
+  sessionId: string;
+}
+
+export interface ModelSelectMessage {
+  type: 'model_select';
+  sessionId: string;
+  model: string;
 }
 
 export type ControlAction =
@@ -37,6 +90,7 @@ export type DaemonMessage =
   | ParsedEventMessage
   | StatusUpdateMessage
   | AgentListMessage
+  | ModelListMessage
   | ErrorMessage;
 
 export interface TerminalOutputMessage {
@@ -60,6 +114,13 @@ export interface StatusUpdateMessage {
 export interface AgentListMessage {
   type: 'agent_list';
   agents: { id: string; type: string; status: AgentStatus; projectPath: string }[];
+}
+
+export interface ModelListMessage {
+  type: 'model_list';
+  sessionId: string;
+  models: string[];
+  selected?: string;
 }
 
 export interface ErrorMessage {

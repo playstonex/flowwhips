@@ -128,6 +128,12 @@ export default function TerminalScreen() {
         </View>
         <View style={styles.spacer} />
         <Pressable
+          onPress={() => router.push(`/chat/${sessionId}`)}
+          style={styles.toolbarButton}
+        >
+          <Text style={[styles.toolbarButtonText, { color: c.textTertiary }]}>Chat</Text>
+        </Pressable>
+        <Pressable
           onPress={() => router.push(`/agent/${sessionId}`)}
           style={styles.toolbarButton}
         >

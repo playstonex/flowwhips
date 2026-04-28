@@ -73,6 +73,13 @@ export default function AgentDetailScreen() {
           </View>
         </View>
         <Pressable
+          onPress={() => router.push(`/chat/${sessionId}`)}
+          style={[styles.terminalButton, { backgroundColor: 'rgba(34,197,94,0.09)', borderColor: 'rgba(34,197,94,0.25)' }]}
+        >
+          <Text style={[styles.terminalButtonText, { color: '#22c55e' }]}>Chat</Text>
+          <Text style={[styles.terminalButtonArrow, { color: '#22c55e' }]}>{'\u{2192}'}</Text>
+        </Pressable>
+        <Pressable
           onPress={() => router.push(`/terminal/${sessionId}`)}
           style={[styles.terminalButton, { backgroundColor: 'rgba(59,130,246,0.09)', borderColor: 'rgba(59,130,246,0.25)' }]}
         >
