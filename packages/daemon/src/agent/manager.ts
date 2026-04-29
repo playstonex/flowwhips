@@ -1,4 +1,4 @@
-import type { AgentConfig, AgentProcess, ParsedEvent, SdkAgentAdapter } from '@baton/shared';
+import type { AgentConfig, AgentProcess, ParsedEvent, SdkAgentAdapter, ReasoningEffort, AccessMode, ServiceTier } from '@baton/shared';
 import { VALID_TRANSITIONS, generateId } from '@baton/shared';
 import type { AgentState, AgentSnapshot, TimelineItem } from '@baton/shared';
 import type { BaseAgentAdapter } from './adapter.js';
@@ -536,12 +536,11 @@ export class AgentManager {
       setTimeout(() => {
         if (managed.pty) managed.pty.write(content + '\n');
       }, 200);
+      for (const cb of managed.eventCallbacks) {
+        cb({ type: 'chat_message', role: 'user', content, timestamp: Date.now() }, id);
+      }
     } else {
       throw new Error(`Agent ${id} has no active session`);
-    }
-
-    for (const cb of managed.eventCallbacks) {
-      cb({ type: 'chat_message', role: 'user', content, timestamp: Date.now() }, id);
     }
   }
 
@@ -638,6 +637,111 @@ export class AgentManager {
   getSelectedModel(id: string): string | undefined {
     const adapter = this.getAdapterWithModels(id);
     return adapter?.selectedModel ?? undefined;
+  }
+
+  setReasoningEffort(id: string, effort: ReasoningEffort): void {
+    const adapter = this.getAdapterWithModels(id);
+    if (adapter && 'selectedReasoningEffort' in adapter) {
+      (adapter as unknown as { selectedReasoningEffort: ReasoningEffort }).selectedReasoningEffort = effort;
+    }
+  }
+
+  setAccessMode(id: string, mode: AccessMode): void {
+    const adapter = this.getAdapterWithModels(id);
+    if (adapter && 'selectedAccessMode' in adapter) {
+      (adapter as unknown as { selectedAccessMode: AccessMode }).selectedAccessMode = mode;
+    }
+  }
+
+  setServiceTier(id: string, tier: ServiceTier): void {
+    const adapter = this.getAdapterWithModels(id);
+    if (adapter && 'selectedServiceTier' in adapter) {
+      (adapter as unknown as { selectedServiceTier: ServiceTier }).selectedServiceTier = tier;
+    }
+  }
+
+  async listGitBranches(id: string): Promise<{ branches: string[]; currentBranch: string }> {
+    const managed = this.agents.get(id);
+    if (!managed?.sdkAdapter) return { branches: [], currentBranch: '' };
+    if ('listGitBranches' in managed.sdkAdapter) {
+      return (managed.sdkAdapter as unknown as { listGitBranches: () => Promise<{ branches: string[]; currentBranch: string }> }).listGitBranches();
+    }
+    return { branches: [], currentBranch: '' };
+  }
+
+  async gitStatus(id: string): Promise<string> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitStatus() : '';
+  }
+
+  async gitDiff(id: string): Promise<string> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitDiff() : '';
+  }
+
+  async gitLog(id: string, count?: number): Promise<string> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitLog(count) : '';
+  }
+
+  async gitCheckout(id: string, branch: string): Promise<{ success: boolean; error?: string }> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitCheckout(branch) : { success: false, error: 'No adapter' };
+  }
+
+  async gitCommit(id: string, message: string): Promise<{ success: boolean; error?: string }> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitCommit(message) : { success: false, error: 'No adapter' };
+  }
+
+  async gitPush(id: string): Promise<{ success: boolean; error?: string }> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitPush() : { success: false, error: 'No adapter' };
+  }
+
+  async gitPull(id: string): Promise<{ success: boolean; error?: string }> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitPull() : { success: false, error: 'No adapter' };
+  }
+
+  async gitCreateBranch(id: string, name: string): Promise<{ success: boolean; error?: string }> {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.gitCreateBranch(name) : { success: false, error: 'No adapter' };
+  }
+
+  getProjectPath(id: string): string {
+    const adapter = this.getGitAdapter(id);
+    return adapter ? adapter.getProjectPath() : '';
+  }
+
+  private getGitAdapter(id: string): {
+    gitStatus: () => Promise<string>;
+    gitDiff: () => Promise<string>;
+    gitLog: (count?: number) => Promise<string>;
+    gitCheckout: (branch: string) => Promise<{ success: boolean; error?: string }>;
+    gitCommit: (message: string) => Promise<{ success: boolean; error?: string }>;
+    gitPush: () => Promise<{ success: boolean; error?: string }>;
+    gitPull: () => Promise<{ success: boolean; error?: string }>;
+    gitCreateBranch: (name: string) => Promise<{ success: boolean; error?: string }>;
+    getProjectPath: () => string;
+  } | null {
+    const managed = this.agents.get(id);
+    if (!managed?.sdkAdapter) return null;
+    const sa = managed.sdkAdapter as unknown as Record<string, unknown>;
+    if ('gitStatus' in sa && typeof sa.gitStatus === 'function') {
+      return sa as unknown as {
+        gitStatus: () => Promise<string>;
+        gitDiff: () => Promise<string>;
+        gitLog: (count?: number) => Promise<string>;
+        gitCheckout: (branch: string) => Promise<{ success: boolean; error?: string }>;
+        gitCommit: (message: string) => Promise<{ success: boolean; error?: string }>;
+        gitPush: () => Promise<{ success: boolean; error?: string }>;
+        gitPull: () => Promise<{ success: boolean; error?: string }>;
+        gitCreateBranch: (name: string) => Promise<{ success: boolean; error?: string }>;
+        getProjectPath: () => string;
+      };
+    }
+    return null;
   }
 
   private getAdapterWithModels(id: string): { selectedModel: string | null; listModels?: () => Promise<string[]> } | null {

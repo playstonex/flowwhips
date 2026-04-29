@@ -5,6 +5,9 @@ import type {
   SessionStatus,
   HostStatus,
   AdapterMode,
+  ReasoningEffort,
+  AccessMode,
+  ServiceTier,
 } from '../types/index.js';
 
 // WebSocket message types: Client → Daemon
@@ -17,6 +20,16 @@ export type ClientMessage =
   | RejectInputMessage
   | ModelListRequestMessage
   | ModelSelectMessage
+  | ReasoningEffortSelectMessage
+  | AccessModeSelectMessage
+  | ServiceTierSelectMessage
+  | GitBranchListRequestMessage
+  | GitBranchSelectMessage
+  | GitStatusRequestMessage
+  | GitCommitMessage
+  | GitPushMessage
+  | GitPullMessage
+  | GitCreateBranchMessage
   | ControlMessage;
 
 export interface TerminalInputMessage {
@@ -69,6 +82,62 @@ export interface ModelSelectMessage {
   model: string;
 }
 
+export interface ReasoningEffortSelectMessage {
+  type: 'reasoning_effort_select';
+  sessionId: string;
+  effort: ReasoningEffort;
+}
+
+export interface AccessModeSelectMessage {
+  type: 'access_mode_select';
+  sessionId: string;
+  mode: AccessMode;
+}
+
+export interface ServiceTierSelectMessage {
+  type: 'service_tier_select';
+  sessionId: string;
+  tier: ServiceTier;
+}
+
+export interface GitBranchListRequestMessage {
+  type: 'git_branch_list_request';
+  sessionId: string;
+}
+
+export interface GitBranchSelectMessage {
+  type: 'git_branch_select';
+  sessionId: string;
+  branch: string;
+}
+
+export interface GitStatusRequestMessage {
+  type: 'git_status_request';
+  sessionId: string;
+}
+
+export interface GitCommitMessage {
+  type: 'git_commit';
+  sessionId: string;
+  message: string;
+}
+
+export interface GitPushMessage {
+  type: 'git_push';
+  sessionId: string;
+}
+
+export interface GitPullMessage {
+  type: 'git_pull';
+  sessionId: string;
+}
+
+export interface GitCreateBranchMessage {
+  type: 'git_create_branch';
+  sessionId: string;
+  name: string;
+}
+
 export type ControlAction =
   | 'start_agent'
   | 'stop_agent'
@@ -91,6 +160,9 @@ export type DaemonMessage =
   | StatusUpdateMessage
   | AgentListMessage
   | ModelListMessage
+  | GitBranchListMessage
+  | GitStatusMessage
+  | GitResultMessage
   | ErrorMessage;
 
 export interface TerminalOutputMessage {
@@ -127,6 +199,29 @@ export interface ErrorMessage {
   type: 'error';
   message: string;
   code?: string;
+}
+
+export interface GitBranchListMessage {
+  type: 'git_branch_list';
+  sessionId: string;
+  branches: string[];
+  currentBranch: string;
+}
+
+export interface GitStatusMessage {
+  type: 'git_status';
+  sessionId: string;
+  status: string;
+  diff: string;
+  projectPath: string;
+}
+
+export interface GitResultMessage {
+  type: 'git_result';
+  sessionId: string;
+  operation: string;
+  success: boolean;
+  error?: string;
 }
 
 // Relay protocol (Phase 2)

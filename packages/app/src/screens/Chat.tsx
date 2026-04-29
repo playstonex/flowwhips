@@ -15,12 +15,12 @@ const STATUS_DOT: Record<string, string> = {
   starting: 'bg-surface-400',
 };
 
-const isRunning = (s: string) => s === 'running' || s === 'thinking' || s === 'executing';
+const isRunning = (s: string) => s === 'running' || s === 'thinking' || s === 'executing' || s === 'waiting_input';
 
 export function ChatScreen() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-  const { messages, agentStatus, addEvent, addUserMessage, setStatus, clear } = useChatStore();
+  const { messages, agentStatus, pendingApproval, approvalDetail, addEvent, addUserMessage, setStatus, resolveApproval, clear } = useChatStore();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -65,7 +65,7 @@ export function ChatScreen() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, pendingApproval]);
 
   function sendChat() {
     if (!input.trim() || !sessionId) return;
@@ -86,6 +86,18 @@ export function ChatScreen() {
   function cancelTurn() {
     if (!sessionId) return;
     wsService.send({ type: 'cancel_turn', sessionId });
+  }
+
+  function approveAction() {
+    if (!sessionId) return;
+    wsService.send({ type: 'approve_input', sessionId, reason: 'Approved via Baton' });
+    resolveApproval();
+  }
+
+  function rejectAction() {
+    if (!sessionId) return;
+    wsService.send({ type: 'reject_input', sessionId, reason: 'Rejected via Baton' });
+    resolveApproval();
   }
 
   function stopAgent() {
@@ -151,6 +163,32 @@ export function ChatScreen() {
         )}
       </div>
 
+      {pendingApproval && (
+        <div className="border-t border-warning-300 bg-warning-50 px-4 py-3 dark:border-warning-800 dark:bg-warning-950">
+          <div className="mx-auto flex max-w-3xl items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-warning-800 dark:text-warning-200">
+                  Agent requests approval: {approvalDetail?.toolName ?? 'action'}
+                </p>
+                {approvalDetail?.detail && (
+                  <p className="mt-0.5 text-xs text-warning-600 dark:text-warning-400">{approvalDetail.detail}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="primary" onPress={approveAction}>
+                Approve
+              </Button>
+              <Button size="sm" variant="danger" onPress={rejectAction}>
+                Reject
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-surface-200 bg-white px-4 py-3 dark:border-surface-800 dark:bg-surface-900">
         <div className="mx-auto flex max-w-3xl items-end gap-2">
           <textarea
@@ -158,11 +196,12 @@ export function ChatScreen() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={running ? 'Type to steer the agent...' : 'Type a message...'}
+            placeholder={pendingApproval ? 'Approve or reject the pending action...' : running ? 'Type to steer the agent...' : 'Type a message...'}
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-surface-700 dark:bg-surface-950 dark:text-surface-100 dark:placeholder:text-surface-500"
+            disabled={pendingApproval}
+            className="flex-1 resize-none rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50 dark:border-surface-700 dark:bg-surface-950 dark:text-surface-100 dark:placeholder:text-surface-500"
           />
-          {running && (
+          {running && !pendingApproval && (
             <Button size="sm" variant="outline" onPress={sendSteer} isDisabled={!input.trim()}>
               <svg className="mr-1 h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 1l6 6-6 6" />
@@ -171,7 +210,7 @@ export function ChatScreen() {
               Steer
             </Button>
           )}
-          {running && (
+          {running && !pendingApproval && (
             <Button size="sm" variant="outline" onPress={cancelTurn}>
               Cancel
             </Button>
@@ -206,6 +245,16 @@ function MessageBubble({ msg }: { msg: { role: string; content: string; eventTyp
       <div className="flex justify-start">
         <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-bl-sm border border-surface-200 bg-white px-4 py-2.5 text-sm text-surface-800 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200">
           {msg.content}
+        </div>
+      </div>
+    );
+  }
+
+  if (msg.eventType === 'waiting_approval') {
+    return (
+      <div className="flex justify-center">
+        <div className="inline-block max-w-[90%] rounded-lg border border-warning-300 bg-warning-50 px-4 py-2 text-center text-sm text-warning-800 dark:border-warning-800 dark:bg-warning-950 dark:text-warning-200">
+          ⚠️ {msg.content}
         </div>
       </div>
     );

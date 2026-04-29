@@ -152,6 +152,102 @@ export class Transport {
         break;
       }
 
+      case 'reasoning_effort_select': {
+        try {
+          this.agentManager.setReasoningEffort(msg.sessionId, msg.effort);
+        } catch (err) {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to set reasoning effort' });
+        }
+        break;
+      }
+
+      case 'access_mode_select': {
+        try {
+          this.agentManager.setAccessMode(msg.sessionId, msg.mode);
+        } catch (err) {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to set access mode' });
+        }
+        break;
+      }
+
+      case 'service_tier_select': {
+        try {
+          this.agentManager.setServiceTier(msg.sessionId, msg.tier);
+        } catch (err) {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to set service tier' });
+        }
+        break;
+      }
+
+      case 'git_branch_list_request': {
+        this.agentManager.listGitBranches(msg.sessionId).then((result) => {
+          this.send(clientId, { type: 'git_branch_list', sessionId: msg.sessionId, ...result });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to list git branches' });
+        });
+        break;
+      }
+
+      case 'git_branch_select': {
+        try {
+          this.agentManager.gitCheckout(msg.sessionId, msg.branch).then((result) => {
+            this.send(clientId, { type: 'git_result', sessionId: msg.sessionId, operation: 'checkout', ...result });
+          });
+        } catch (err) {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to switch branch' });
+        }
+        break;
+      }
+
+      case 'git_status_request': {
+        Promise.all([
+          this.agentManager.gitStatus(msg.sessionId),
+          this.agentManager.gitDiff(msg.sessionId),
+        ]).then(([status, diff]) => {
+          const projectPath = this.agentManager.getProjectPath(msg.sessionId);
+          this.send(clientId, { type: 'git_status', sessionId: msg.sessionId, status, diff, projectPath });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Failed to get git status' });
+        });
+        break;
+      }
+
+      case 'git_commit': {
+        this.agentManager.gitCommit(msg.sessionId, msg.message).then((result) => {
+          this.send(clientId, { type: 'git_result', sessionId: msg.sessionId, operation: 'commit', ...result });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Commit failed' });
+        });
+        break;
+      }
+
+      case 'git_push': {
+        this.agentManager.gitPush(msg.sessionId).then((result) => {
+          this.send(clientId, { type: 'git_result', sessionId: msg.sessionId, operation: 'push', ...result });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Push failed' });
+        });
+        break;
+      }
+
+      case 'git_pull': {
+        this.agentManager.gitPull(msg.sessionId).then((result) => {
+          this.send(clientId, { type: 'git_result', sessionId: msg.sessionId, operation: 'pull', ...result });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Pull failed' });
+        });
+        break;
+      }
+
+      case 'git_create_branch': {
+        this.agentManager.gitCreateBranch(msg.sessionId, msg.name).then((result) => {
+          this.send(clientId, { type: 'git_result', sessionId: msg.sessionId, operation: 'create_branch', ...result });
+        }).catch((err) => {
+          this.send(clientId, { type: 'error', message: err instanceof Error ? err.message : 'Branch creation failed' });
+        });
+        break;
+      }
+
       case 'control':
         this.handleControl(clientId, msg);
         break;
@@ -203,6 +299,9 @@ export class Transport {
         this.ensureSessionRegistered(msg.sessionId);
 
         try {
+          const proc = this.agentManager.get(msg.sessionId);
+          const currentStatus = proc?.status;
+
           const history = this.agentManager.getOutputHistory(msg.sessionId);
           for (const data of history) {
             this.send(clientId, {
@@ -214,6 +313,9 @@ export class Transport {
 
           const events = this.agentManager.getEventHistory(msg.sessionId);
           for (const event of events) {
+            if (event.type === 'waiting_approval' && currentStatus !== 'waiting_input') {
+              continue;
+            }
             this.send(clientId, {
               type: 'parsed_event',
               sessionId: msg.sessionId,
@@ -221,7 +323,6 @@ export class Transport {
             });
           }
 
-          const proc = this.agentManager.get(msg.sessionId);
           if (proc) {
             this.send(clientId, {
               type: 'status_update',

@@ -13,9 +13,12 @@ export interface ChatMessage {
 interface ChatState {
   messages: ChatMessage[];
   agentStatus: string;
+  pendingApproval: boolean;
+  approvalDetail: { toolName: string; detail: string } | null;
   addEvent: (event: ParsedEvent) => void;
   addUserMessage: (content: string) => void;
   setStatus: (status: string) => void;
+  resolveApproval: () => void;
   clear: () => void;
 }
 
@@ -24,6 +27,8 @@ let msgCounter = 0;
 export const useChatStore = create<ChatState>()((set) => ({
   messages: [],
   agentStatus: 'unknown',
+  pendingApproval: false,
+  approvalDetail: null,
 
   addEvent: (event) =>
     set((state) => {
@@ -31,10 +36,21 @@ export const useChatStore = create<ChatState>()((set) => ({
       const ts = event.timestamp;
 
       if (event.type === 'status_change') {
-        return { agentStatus: event.status };
+        const nextPending = event.status === 'waiting_input';
+        return {
+          agentStatus: event.status,
+          pendingApproval: nextPending ? state.pendingApproval : false,
+          approvalDetail: nextPending ? state.approvalDetail : null,
+        };
       }
 
       if (event.type === 'chat_message') {
+        if (event.role === 'user') {
+          const last = state.messages[state.messages.length - 1];
+          if (last?.role === 'user' && last?.content === event.content) {
+            return state;
+          }
+        }
         return {
           messages: [...state.messages, { id, role: event.role, content: event.content, timestamp: ts, eventType: 'chat_message' }],
         };
@@ -61,6 +77,23 @@ export const useChatStore = create<ChatState>()((set) => ({
         return { messages };
       }
 
+      if (event.type === 'waiting_approval') {
+        const meta = (event as ParsedEvent & { meta?: Record<string, unknown> }).meta;
+        const toolName = (meta?.toolName ?? 'unknown') as string;
+        const detail = (meta?.detail ?? '') as string;
+        return {
+          pendingApproval: true,
+          approvalDetail: { toolName, detail },
+          messages: [...state.messages, {
+            id,
+            role: 'system' as const,
+            content: `⏳ Approval required: ${toolName}${detail ? ` — ${detail}` : ''}`,
+            timestamp: ts,
+            eventType: 'waiting_approval',
+          }],
+        };
+      }
+
       if (event.type === 'thinking') {
         const last = state.messages[state.messages.length - 1];
         if (last?.eventType === 'thinking') {
@@ -72,9 +105,9 @@ export const useChatStore = create<ChatState>()((set) => ({
       }
 
       if (event.type === 'tool_use') {
-        const fileHint = event.args?.filePath ? ` \u2192 ${event.args.filePath}` : '';
+        const fileHint = event.args?.filePath ? ` → ${event.args.filePath}` : '';
         return {
-          messages: [...state.messages, { id, role: 'system', content: `\uD83D\uDD27 ${event.tool}${fileHint}`, timestamp: ts, eventType: 'tool_use', meta: event.args as Record<string, unknown> }],
+          messages: [...state.messages, { id, role: 'system', content: `🔧 ${event.tool}${fileHint}`, timestamp: ts, eventType: 'tool_use', meta: event.args as Record<string, unknown> }],
         };
       }
 
@@ -105,7 +138,13 @@ export const useChatStore = create<ChatState>()((set) => ({
       messages: [...state.messages, { id: `msg-${++msgCounter}`, role: 'user', content, timestamp: Date.now(), eventType: 'chat_message' }],
     })),
 
-  setStatus: (status) => set({ agentStatus: status }),
+  setStatus: (status) => set((state) => ({
+    agentStatus: status,
+    pendingApproval: status === 'waiting_input' ? state.pendingApproval : false,
+    approvalDetail: status === 'waiting_input' ? state.approvalDetail : null,
+  })),
 
-  clear: () => set({ messages: [], agentStatus: 'unknown' }),
+  resolveApproval: () => set({ pendingApproval: false, approvalDetail: null }),
+
+  clear: () => set({ messages: [], agentStatus: 'unknown', pendingApproval: false, approvalDetail: null }),
 }));

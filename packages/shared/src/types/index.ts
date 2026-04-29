@@ -35,7 +35,12 @@ export type ParsedEvent =
   | ErrorEvent
   | RawOutputEvent
   | ChatMessageEvent
-  | WaitingApprovalEvent;
+  | WaitingApprovalEvent
+  | PlanEvent
+  | TokenUsageEvent
+  | UserInputPromptEvent
+  | DiffEvent
+  | SubagentEvent;
 
 export interface StatusChangeEvent {
   type: 'status_change';
@@ -48,6 +53,7 @@ export interface ToolUseEvent {
   tool: string;
   args: Record<string, unknown>;
   timestamp: number;
+  itemId?: string;
 }
 
 export interface FileChangeEvent {
@@ -56,19 +62,24 @@ export interface FileChangeEvent {
   changeType: 'create' | 'modify' | 'delete';
   diff?: string;
   timestamp: number;
+  itemId?: string;
 }
 
 export interface CommandExecEvent {
   type: 'command_exec';
   command: string;
   exitCode?: number;
+  output?: string;
+  isStreaming?: boolean;
   timestamp: number;
+  itemId?: string;
 }
 
 export interface ThinkingEvent {
   type: 'thinking';
   content: string;
   timestamp: number;
+  itemId?: string;
 }
 
 export interface ErrorEvent {
@@ -81,6 +92,7 @@ export interface RawOutputEvent {
   type: 'raw_output';
   content: string;
   timestamp: number;
+  itemId?: string;
 }
 
 export type ChatRole = 'user' | 'assistant';
@@ -96,6 +108,57 @@ export interface WaitingApprovalEvent {
   type: 'waiting_approval';
   timestamp: number;
 }
+
+export interface PlanEvent {
+  type: 'plan';
+  explanation?: string;
+  steps?: Array<{ step: string; status: 'pending' | 'in_progress' | 'completed' }>;
+  presentation: 'progress' | 'resultStreaming' | 'resultReady' | 'resultCompleted';
+  timestamp: number;
+  itemId?: string;
+}
+
+export interface TokenUsageEvent {
+  type: 'token_usage';
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  timestamp: number;
+}
+
+export interface UserInputPromptEvent {
+  type: 'user_input_prompt';
+  questions: Array<{
+    id: string;
+    header: string;
+    question: string;
+    options?: Array<{ label: string; description: string }>;
+  }>;
+  timestamp: number;
+}
+
+export interface DiffEvent {
+  type: 'diff';
+  diff: string;
+  path?: string;
+  timestamp: number;
+  itemId?: string;
+}
+
+export interface SubagentEvent {
+  type: 'subagent';
+  action: 'started' | 'completed' | 'message';
+  name?: string;
+  model?: string;
+  content?: string;
+  status?: string;
+  timestamp: number;
+  itemId?: string;
+}
+
+export type ReasoningEffort = 'low' | 'medium' | 'high';
+export type AccessMode = 'on-request' | 'full-access';
+export type ServiceTier = 'default' | 'fast';
 
 // Agent Adapter interface
 export interface AgentAdapter {
