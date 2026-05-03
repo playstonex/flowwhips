@@ -11,7 +11,7 @@
     "./crypto": "./src/crypto/index.ts"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
+    "@types/node": "^25.6.0",
     "typescript": "^5.8.3"
   },
   "scripts": {
@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "tweetnacl": "^1.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.2"
   }
 }
