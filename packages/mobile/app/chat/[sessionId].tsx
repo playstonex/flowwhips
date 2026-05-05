@@ -803,7 +803,7 @@ export default function ChatScreen() {
           <BlurView
             tint={c.isDark ? 'dark' : 'light'}
             intensity={40}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
 
           {planMode && (
